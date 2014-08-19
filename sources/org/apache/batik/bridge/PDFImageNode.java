@@ -14,10 +14,8 @@ import org.w3c.dom.Element;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfImportedPage;
 import com.itextpdf.text.pdf.PdfReader;
-import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 
 /**
@@ -65,27 +63,28 @@ public class PDFImageNode extends AbstractGraphicsNode {
     	PdfGraphics2DExt pdfG2d = (PdfGraphics2DExt) g2d;
     	PdfReader reader;
 		try {
-			//String url ="/var/sfsite/jobs/3-ecozl9lt4a/content/web2print/text-1284518724984954084.pdf";
 			reader = new PdfReader(url);
-	    	//PdfContentByte cb = pdfG2d.getContent();
-	    	
 	    	PdfWriter writer = pdfG2d.getPdfWriter();
 	    	
 	    	PdfImportedPage embeddedPdfPage = writer.getImportedPage(reader, 1);
 	    	Image img = Image.getInstance(embeddedPdfPage); 
+	    	
 	    	img.setAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
-	    	//size according to svg <image> elements height,width
-/*	    	String svgHeight = e.getAttribute("height");
-	    	String svgWidth = e.getAttribute("width");
-	    	float svgheight = Float.parseFloat(svgHeight);
-	    	float svgwidth = Float.parseFloat(svgWidth);
-	    	img.setAbsolutePosition(0, 0);*/
+	    	
+	    	//rotate
+	    	String rotationDegrees = ((Element)e.getParentNode()).getAttributeNodeNS("http://www.shutterfly.com/module/layout/v5","rotationEnum").getValue();
+	    	float deg=Float.parseFloat(rotationDegrees);
+	    	img.setRotationDegrees(deg);
+	    	
+	    	//position
 	    	String x = e.getAttribute("x");
 	    	String y = e.getAttribute("y");
 	    	float xfloat = Float.parseFloat(x);
 	    	float yfloat = Float.parseFloat(y);
             AffineTransform relativePositionTransform= new AffineTransform();
             relativePositionTransform.translate(xfloat, yfloat);
+            
+            //draw
             pdfG2d.drawPDfImage(img, relativePositionTransform);
 	    	
 		} catch (IOException e) {
