@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.batik.css.engine.CSSEngine;
@@ -57,7 +58,6 @@ import org.apache.batik.util.HaltingThread;
 import org.apache.batik.util.MimeTypeConstants;
 import org.apache.batik.util.ParsedURL;
 import org.apache.batik.util.XMLConstants;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.events.DocumentEvent;
@@ -72,7 +72,7 @@ import org.w3c.dom.svg.SVGSVGElement;
  * Bridge class for the &lt;image> element.
  *
  * @author <a href="mailto:tkormann@apache.org">Thierry Kormann</a>
- * @version $Id: SVGImageElementBridge.java 579487 2007-09-26 06:40:16Z cam $
+ * @version $Id: SVGImageElementBridge.java 579487 2014-08-15 16:42:25Z cam $
  */
 public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
 
@@ -173,9 +173,22 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         } else {
             purl = new ParsedURL(baseURI, uriStr);
         }
-
+        //start:SFLY
+        if(purl.toString().endsWith(".pdf")){
+        	return createPDFGraphicsNode(ctx,e,purl);
+        }
+        //end:SFLY
+        
         return createImageGraphicsNode(ctx, e, purl);
     }
+
+    //start:SFLY
+    private GraphicsNode createPDFGraphicsNode(BridgeContext ctx, Element e,
+			ParsedURL purl) {
+		PDFImageNode gnode = new PDFImageNode(ctx,e,purl);
+		return gnode;
+	}
+    //end:SFLY
 
     protected GraphicsNode createImageGraphicsNode(BridgeContext ctx,
                                                    Element e,
@@ -299,7 +312,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
             throw ibe;
         } catch (Exception ex) {
             /* Nothing to do */
-            // ex.printStackTrace();
+            ex.printStackTrace();
         }
 
         try {
@@ -373,7 +386,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         throws IOException {
         List mimeTypes = new ArrayList
             (ImageTagRegistry.getRegistry().getRegisteredMimeTypes());
-        mimeTypes.add(MimeTypeConstants.MIME_TYPES_SVG);
+        mimeTypes.addAll(Arrays.asList(MimeTypeConstants.MIME_TYPES_SVG));
         InputStream reference = purl.openStream(mimeTypes.iterator());
         return new ProtectedStream(reference);
     }
