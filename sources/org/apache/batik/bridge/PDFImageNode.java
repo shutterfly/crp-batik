@@ -67,22 +67,19 @@ public class PDFImageNode extends AbstractGraphicsNode {
 		try {
 			//String url ="/var/sfsite/jobs/3-ecozl9lt4a/content/web2print/text-1284518724984954084.pdf";
 			reader = new PdfReader(url);
-	    	PdfContentByte cb = pdfG2d.getContent();
+	    	//PdfContentByte cb = pdfG2d.getContent();
 	    	
 	    	PdfWriter writer = pdfG2d.getPdfWriter();
 	    	
 	    	PdfImportedPage embeddedPdfPage = writer.getImportedPage(reader, 1);
 	    	Image img = Image.getInstance(embeddedPdfPage); 
-	    	
+	    	img.setAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
 	    	//size according to svg <image> elements height,width
-	    	String svgHeight = e.getAttribute("height");
+/*	    	String svgHeight = e.getAttribute("height");
 	    	String svgWidth = e.getAttribute("width");
 	    	float svgheight = Float.parseFloat(svgHeight);
 	    	float svgwidth = Float.parseFloat(svgWidth);
-	    	img.setAbsolutePosition(0, 0);
-	    	//img.scaleAbsolute(svgwidth,svgheight);
-	    	//paceAtBottom for text=svgheight=img.getHeight();
-	    	//position according to svg <image> element's x,y
+	    	img.setAbsolutePosition(0, 0);*/
 	    	String x = e.getAttribute("x");
 	    	String y = e.getAttribute("y");
 	    	float xfloat = Float.parseFloat(x);
