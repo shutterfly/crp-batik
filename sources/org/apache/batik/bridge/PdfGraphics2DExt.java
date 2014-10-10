@@ -87,6 +87,8 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.awt.image.renderable.RenderableImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.AttributedCharacterIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,6 +106,7 @@ import javax.imageio.stream.ImageOutputStream;
 import com.itextpdf.awt.DefaultFontMapper;
 import com.itextpdf.awt.FontMapper;
 import com.itextpdf.awt.geom.PolylineShape;
+import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ByteBuffer;
@@ -1596,31 +1599,25 @@ public class PdfGraphics2DExt extends Graphics2D {
 
         try {
             com.itextpdf.text.Image image = null;
-            if(!convertImagesToJPEG){
-                image = com.itextpdf.text.Image.getInstance(img, bgColor);
+            boolean hasTransparency=true;//assume transparent if not know
+            if(img instanceof BufferedImage){
+            	BufferedImage buffImg = (BufferedImage)img;
+            	if (!buffImg.getColorModel().hasAlpha()) {
+            		hasTransparency=false;
+            	}
             }
-            else{
-                BufferedImage scaled = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
-                Graphics2D g3 = scaled.createGraphics();
-                g3.drawImage(img, 0, 0, img.getWidth(null), img.getHeight(null), null);
-                g3.dispose();
+            
+			if (!convertImagesToJPEG || hasTransparency) {
+				image = com.itextpdf.text.Image.getInstance(img, bgColor);
+			}
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageWriteParam iwparam = new JPEGImageWriteParam(Locale.getDefault());
-                iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                iwparam.setCompressionQuality(jpegQuality);//Set here your compression rate
-                ImageWriter iw = ImageIO.getImageWritersByFormatName("jpg").next();
-                ImageOutputStream ios = ImageIO.createImageOutputStream(baos);
-                iw.setOutput(ios);
-                iw.write(null, new IIOImage(scaled, null, null), iwparam);
-                iw.dispose();
-                ios.close();
-
-                scaled.flush();
-                scaled = null;
-                image = com.itextpdf.text.Image.getInstance(baos.toByteArray());
-
-            }
+			else {
+				if (hasTransparency) {
+					//image = createPNG(img);
+				} else {
+					image = createJPEG(img);
+				}
+			}
             if (mask!=null) {
                 com.itextpdf.text.Image msk = com.itextpdf.text.Image.getInstance(mask, null, true);
                 msk.makeMask();
@@ -1642,6 +1639,50 @@ public class PdfGraphics2DExt extends Graphics2D {
         }
         return true;
     }
+
+
+/*	private com.itextpdf.text.Image createPNG(Image img) throws IOException, BadElementException  {
+		com.itextpdf.text.Image image;
+		BufferedImage scaled = new BufferedImage(img.getWidth(null),
+				img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g3 = scaled.createGraphics();
+		g3.drawImage(img, 0, 0, img.getWidth(null), img.getHeight(null), null);
+		g3.dispose();
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+		ImageIO.write(scaled, "PNG",baos);
+
+		scaled.flush();
+		scaled = null;
+		image = com.itextpdf.text.Image.getInstance(baos.toByteArray());
+		return image;
+	}*/
+	
+	private com.itextpdf.text.Image createJPEG(Image img) throws IOException,
+			BadElementException, MalformedURLException {
+		com.itextpdf.text.Image image;
+		BufferedImage scaled = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
+		Graphics2D g3 = scaled.createGraphics();
+		g3.drawImage(img, 0, 0, img.getWidth(null), img.getHeight(null), null);
+		g3.dispose();
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageWriteParam iwparam = new JPEGImageWriteParam(Locale.getDefault());
+		iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+		iwparam.setCompressionQuality(jpegQuality);//Set here your compression rate
+		ImageWriter iw = ImageIO.getImageWritersByFormatName("jpg").next();
+		ImageOutputStream ios = ImageIO.createImageOutputStream(baos);
+		iw.setOutput(ios);
+		iw.write(null, new IIOImage(scaled, null, null), iwparam);
+		iw.dispose();
+		ios.close();
+
+		scaled.flush();
+		scaled = null;
+		image = com.itextpdf.text.Image.getInstance(baos.toByteArray());
+		return image;
+	}
 
     
     public boolean drawPDfImage(com.itextpdf.text.Image image, AffineTransform xform) {

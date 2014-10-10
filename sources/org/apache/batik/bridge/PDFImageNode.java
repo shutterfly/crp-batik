@@ -71,20 +71,25 @@ public class PDFImageNode extends AbstractGraphicsNode {
 	    	
 	    	img.setAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
 	    	
-	    	//rotate
-	    	String rotationDegrees = ((Element)e.getParentNode()).getAttributeNodeNS("http://www.shutterfly.com/module/layout/v5","rotationEnum").getValue();
-	    	float deg=Float.parseFloat(rotationDegrees);
-	    	img.setRotationDegrees(deg);
+	    	//removed. see below comments
+	    	//String rotationDegrees = ((Element)e.getParentNode()).getAttributeNodeNS("http://www.shutterfly.com/module/layout/v5","rotationEnum").getValue();
+	    	//float deg=Float.parseFloat(rotationDegrees);
+	    	//img.setRotationDegrees(deg);
 	    	
 	    	//position
-	    	String x = e.getAttribute("x");
-	    	String y = e.getAttribute("y");
-	    	float xfloat = Float.parseFloat(x);
-	    	float yfloat = Float.parseFloat(y);
+	    	//String x = e.getAttribute("x");
+	    	//String y = e.getAttribute("y");
+	    	//float xfloat = Float.parseFloat(x);
+	    	//float yfloat = Float.parseFloat(y);
+	    	
             AffineTransform relativePositionTransform= new AffineTransform();
-            relativePositionTransform.translate(xfloat, yfloat);
             
-            //draw
+            //removed. See below comments
+            //relativePositionTransform.translate(xfloat, yfloat);
+            
+            //draw with identity transform. 
+            // This PDFImage node is child of a Image node in the GVT(batiks internal rep of SVG) tree and the parent ImageNode applies the transform from svg's <image transform=(..)>
+            
             pdfG2d.drawPDfImage(img, relativePositionTransform);
 	    	
 		} catch (IOException e) {
@@ -116,5 +121,9 @@ public class PDFImageNode extends AbstractGraphicsNode {
         //No interactive features, just return primitive bounds
         return getPrimitiveBounds();
     }
+
+	public void invalidateGeometryCachePublic() {
+		invalidateGeometryCache();
+	}
 
 }

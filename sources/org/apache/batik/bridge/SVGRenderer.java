@@ -71,11 +71,16 @@ public class SVGRenderer {
     public void createPdf() throws IOException, DocumentException {
     	Document document = new Document(new Rectangle(width, height));
     	PdfWriter pdfWriter = PdfWriter.getInstance(document, new FileOutputStream(output));
+    	pdfWriter.setCompressionLevel(9);
+    	pdfWriter.setFullCompression();
     	document.open();
         PdfContentByte pdfContentByte = pdfWriter.getDirectContent();
         PdfTemplate pdfTemplate = pdfContentByte.createTemplate(width, height);
         
-        Graphics2D g2d = new PdfGraphics2DExt(pdfWriter, pdfContentByte, width, height);
+        //@@@CRP: Ankit. Configure PDFGraphics to compress jpegs with 95% quality
+		Graphics2D g2d = new PdfGraphics2DExt(pdfWriter, pdfContentByte, width, height, null, false, true, 0.95f);
+		//new PdfGraphics2DExt(pdfWriter, pdfContentByte, width, height);
+		
         SVGDocument svgDoc = factory.createSVGDocument(input);
         GraphicsNode mapGraphics = builder.build(ctx, svgDoc);
         mapGraphics.paint(g2d);
@@ -94,7 +99,7 @@ public class SVGRenderer {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-    	renderUsingIText( new File("/var/sfsite/jobs/3-8jx93oun/result.svg").toURL().toString(), "/var/sfsite/jobs/3-8jx93oun", "simple-itextfixed", "pdf");    }
+    	renderUsingIText( new File("/var/sfsite/jobs/body.sdxml-lyjm7sck/result.svg").toURL().toString(), "/var/sfsite/jobs/body.sdxml-lyjm7sck/", "simple-itextfixed", "pdf");    }
     
 	public static void renderUsingIText(String svgUrl, String destFolder, String destFile, String fileType)
 			throws IOException {
@@ -103,12 +108,13 @@ public class SVGRenderer {
 
 			SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
 			SVGDocument svgDoc = factory.createSVGDocument(svgUrl);
-			float width=
-					Float.parseFloat(svgDoc.getDocumentElement()
-							.getAttribute("width").replaceAll("px", ""));
-			float height = 
-					Float.parseFloat(svgDoc.getDocumentElement()
-							.getAttribute("height").replaceAll("px", ""));
+			
+			String strWidth = svgDoc.getDocumentElement()
+					.getAttribute("width");
+			String strHeight = svgDoc.getDocumentElement()
+			.getAttribute("height");
+			float width = Float.parseFloat(strWidth.replaceAll("px", "").replaceAll("in", ""))*(strWidth.endsWith("in")?72:1);
+			float height = Float.parseFloat(strHeight.replaceAll("px", "").replaceAll("in", ""))*(strHeight.endsWith("in")?72:1);
 			new SVGRenderer(svgUrl, new File(destFolder, destFile + "." + fileType).getAbsolutePath(), width, height).createPdf();
 			
 		} catch (Exception e) {

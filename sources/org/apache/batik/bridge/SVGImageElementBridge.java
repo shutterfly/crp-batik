@@ -121,8 +121,20 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         if (node == null) {
             SVGImageElement ie = (SVGImageElement) e;
             String uriStr = ie.getHref().getAnimVal();
-            throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,
-                                      new Object[] {uriStr});
+/*            try{
+            	String fileName = new File(uriStr).getName();
+            	fileName=fileName.replaceAll("-fetch", "").replaceAll("orig-v2", "svg");
+            	File file = new File("/var/sfsite/assets",fileName);
+            	if(file.exists()){
+            		System.out.println("local asset: "+file.getAbsolutePath());
+            		uriStr=file.getAbsolutePath();
+            	}
+            }catch(Exception ex){
+            	
+            }*/
+            return null;
+            //@@@CRP: Ankit. This is temporary only to keep rendering if few svg assets in page are not available. TODO: remove
+            //throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,new Object[] {uriStr});
         }
 
         imageNode.setImage(node);
@@ -156,13 +168,25 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
 
         // 'xlink:href' attribute - required
         String uriStr = ie.getHref().getAnimVal();
+/*        try{
+        	String fileName = new File(uriStr).getName();
+        	fileName=fileName.replaceAll("-fetch", "").replaceAll("orig-v2", "svg");
+        	File file = new File("/var/sfsite/assets",fileName);
+        	if(file.exists()){
+        		System.out.println("local asset: "+file.getAbsolutePath());
+        		uriStr=file.getAbsolutePath();
+        	}
+        }catch(Exception ex){
+        	
+        }*/
         if (uriStr.length() == 0) {
-            throw new BridgeException(ctx, e, ERR_ATTRIBUTE_MISSING,
-                                      new Object[] {"xlink:href"});
+        	return null;
+            //throw new BridgeException(ctx, e, ERR_ATTRIBUTE_MISSING, new Object[] {"xlink:href"});
         }
         if (uriStr.indexOf('#') != -1) {
-            throw new BridgeException(ctx, e, ERR_ATTRIBUTE_VALUE_MALFORMED,
-                                      new Object[] {"xlink:href", uriStr});
+            return null;
+            //@@@CRP: Ankit. This is temporary and only to let the rendering continue even if some svg assets are missing. TODO: remove
+        	//throw new BridgeException(ctx, e, ERR_ATTRIBUTE_VALUE_MALFORMED, new Object[] {"xlink:href", uriStr});
         }
 
         // Build the URL.
@@ -173,19 +197,55 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         } else {
             purl = new ParsedURL(baseURI, uriStr);
         }
-        //start:SFLY
+        //@@@CRP: Ankit. start:SFLY changes to support .pdf just like .png or .jpeg images in svg
         if(purl.toString().endsWith(".pdf")){
         	return createPDFGraphicsNode(ctx,e,purl);
         }
         //end:SFLY
-        
+        if(purl==null || purl.toString() == null || purl.toString().trim().equals("")){
+        	//@@@CRP: Ankit. This is temporary, for svg image tags without image links. TODO: remove
+        	//image url is empty do nothing
+        	return null;
+        }
         return createImageGraphicsNode(ctx, e, purl);
     }
 
-    //start:SFLY
+    ///@@@CRP: Ankit. start:SFLY changes to support .pdf just like .png or .jpeg images in svg
     private GraphicsNode createPDFGraphicsNode(BridgeContext ctx, Element e,
 			ParsedURL purl) {
-		PDFImageNode gnode = new PDFImageNode(ctx,e,purl);
+    	PDFImageNode gnode = new PDFImageNode(ctx,e,purl);
+    	Rectangle2D bounds=getImageBounds(ctx, e);//svg image tag's height and width
+
+    	//embedded pdf page's height and width
+    	//since w2p request is made for same size(wxh) pdf as the svg <image>'s size(hxw)
+    	Rectangle2D imgBounds = (Rectangle2D) bounds.clone();
+    	
+    	//if pdf's w x h were different than svg <image>'s w x h, then following would be needed
+    	/*try {
+			PdfReader reader = new PdfReader(purl.getPath());
+			Rectangle pdfBounds = reader.getPageSize(1);
+			//this is only the outline of the shape of embedded pdf without location info, that x,y = 0,0.
+			imgBounds.setRect(0, 0, pdfBounds.getWidth(), pdfBounds.getHeight());
+		} catch (IOException ioe) {
+			throw new RuntimeException("Unable to open " + purl.toString(), ioe);
+		}*/
+
+    	gnode.fireGraphicsNodeChangeStarted();
+        gnode.invalidateGeometryCachePublic();
+        gnode.fireGraphicsNodeChangeCompleted();
+
+        // create the implicit viewBox for the embedded pdf image(actually text). The viewBox for a
+        // image is the size of the image or height and width of imported pdf page
+        float [] vb = new float[4];
+        vb[0] = 0; // x
+        vb[1] = 0; // y
+        vb[2] = (float)imgBounds.getWidth(); // width
+        vb[3] = (float)imgBounds.getHeight(); // height
+
+        
+		// handles the 'preserveAspectRatio', 'overflow' and 'clip' and sets the
+        // appropriate AffineTransform to the image node
+        initializeViewport(ctx, e, gnode, vb, bounds);
 		return gnode;
 	}
     //end:SFLY
@@ -565,8 +625,8 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         if (inode == null) {
             SVGImageElement ie = (SVGImageElement) e;
             String uriStr = ie.getHref().getAnimVal();
-            throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,
-                                      new Object[] {uriStr});
+            //@@@CRP: Ankit. This is only temporary. Let the page render if we have svg with image tags lacking links to image. TODO: remove
+            //throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,new Object[] {uriStr});
         }
     }
 
