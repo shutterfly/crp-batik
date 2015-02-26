@@ -21,11 +21,11 @@ package org.apache.batik.dom.svg;
 import org.apache.batik.dom.AbstractDocument;
 import org.apache.batik.util.DoublyIndexedTable;
 import org.apache.batik.util.SVGTypes;
-
 import org.w3c.dom.Node;
 import org.w3c.dom.svg.SVGAnimatedBoolean;
 import org.w3c.dom.svg.SVGAnimatedEnumeration;
 import org.w3c.dom.svg.SVGAnimatedInteger;
+import org.w3c.dom.svg.SVGAnimatedLength;
 import org.w3c.dom.svg.SVGAnimatedNumber;
 import org.w3c.dom.svg.SVGAnimatedNumberList;
 import org.w3c.dom.svg.SVGAnimatedString;
@@ -224,7 +224,7 @@ public class SVGOMFEConvolveMatrixElement
      * <b>DOM</b>: Implements {@link
      * org.w3c.dom.svg.SVGFEConvolveMatrixElement#getKernelUnitLengthX()}.
      */
-    public SVGAnimatedNumber getKernelUnitLengthX() {
+    public SVGAnimatedLength getKernelUnitLengthX() {
         throw new UnsupportedOperationException
             ("SVGFEConvolveMatrixElement.getKernelUnitLengthX is not implemented"); // XXX
     }
@@ -233,7 +233,7 @@ public class SVGOMFEConvolveMatrixElement
      * <b>DOM</b>: Implements {@link
      * org.w3c.dom.svg.SVGFEConvolveMatrixElement#getKernelUnitLengthY()}.
      */
-    public SVGAnimatedNumber getKernelUnitLengthY() {
+    public SVGAnimatedLength getKernelUnitLengthY() {
         throw new UnsupportedOperationException
             ("SVGFEConvolveMatrixElement.getKernelUnitLengthY is not implemented"); // XXX
     }

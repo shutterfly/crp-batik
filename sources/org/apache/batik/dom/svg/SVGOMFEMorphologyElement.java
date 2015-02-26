@@ -21,9 +21,9 @@ package org.apache.batik.dom.svg;
 import org.apache.batik.dom.AbstractDocument;
 import org.apache.batik.util.DoublyIndexedTable;
 import org.apache.batik.util.SVGTypes;
-
 import org.w3c.dom.Node;
 import org.w3c.dom.svg.SVGAnimatedEnumeration;
+import org.w3c.dom.svg.SVGAnimatedLength;
 import org.w3c.dom.svg.SVGAnimatedNumber;
 import org.w3c.dom.svg.SVGAnimatedString;
 import org.w3c.dom.svg.SVGFEMorphologyElement;
@@ -131,7 +131,7 @@ public class SVGOMFEMorphologyElement
     /**
      * <b>DOM</b>: Implements {@link SVGFEMorphologyElement#getRadiusX()}.
      */
-    public SVGAnimatedNumber getRadiusX() {
+    public SVGAnimatedLength getRadiusX() {
         throw new UnsupportedOperationException
             ("SVGFEMorphologyElement.getRadiusX is not implemented"); // XXX
     }
@@ -139,7 +139,7 @@ public class SVGOMFEMorphologyElement
     /**
      * <b>DOM</b>: Implements {@link SVGFEMorphologyElement#getRadiusY()}.
      */
-    public SVGAnimatedNumber getRadiusY() {
+    public SVGAnimatedLength getRadiusY() {
         throw new UnsupportedOperationException
             ("SVGFEMorphologyElement.getRadiusY is not implemented"); // XXX
     }
