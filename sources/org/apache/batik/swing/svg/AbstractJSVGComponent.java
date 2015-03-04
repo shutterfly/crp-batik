@@ -77,13 +77,14 @@ import org.apache.batik.util.RunnableQueue;
 import org.apache.batik.util.SVGConstants;
 import org.apache.batik.util.SVGFeatureStrings;
 import org.apache.batik.util.XMLResourceDescriptor;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Element;
 import org.w3c.dom.svg.SVGAElement;
 import org.w3c.dom.svg.SVGDocument;
 import org.w3c.dom.svg.SVGSVGElement;
+
+import com.shutterfly.crp.common.SflyColor;
 
 /**
  * This class represents a swing component that can display SVG documents. This
@@ -864,9 +865,11 @@ public class AbstractJSVGComponent extends JGVTComponent {
         }
         BridgeContext result;
         if (doc.isSVG12()) {
-            result = new SVG12BridgeContext(userAgent, loader);
+        	// CRP: This is not used by sfly workflow, it is fine without sfly color mapping.
+            result = new SVG12BridgeContext(userAgent, loader, new HashMap<String, SflyColor>());
         } else {
-            result = new BridgeContext(userAgent, loader);
+        	// CRP: This is not used by sfly workflow, it is fine without sfly color mapping.
+            result = new BridgeContext(userAgent, loader, new HashMap<String, SflyColor>());
         }
         return result;
     }

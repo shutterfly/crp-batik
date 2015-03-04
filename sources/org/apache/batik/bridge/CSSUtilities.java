@@ -812,7 +812,8 @@ public abstract class CSSUtilities
     public static Color convertLightingColor(Element e, BridgeContext ctx) {
         Value v = getComputedStyle(e, SVGCSSEngine.LIGHTING_COLOR_INDEX);
         if (v.getCssValueType() == CSSValue.CSS_PRIMITIVE_VALUE) {
-            return PaintServer.convertColor(v, 1);
+            // CRP: 'ctx' param added for conversion.
+        	return PaintServer.convertColor(v, 1, ctx);
         } else {
             return PaintServer.convertRGBICCColor
                 (e, v.item(0), (ICCColor)v.item(1), 1, ctx);
@@ -835,7 +836,8 @@ public abstract class CSSUtilities
         Value o = getComputedStyle(e, SVGCSSEngine.FLOOD_OPACITY_INDEX);
         float f = PaintServer.convertOpacity(o);
         if (v.getCssValueType() == CSSValue.CSS_PRIMITIVE_VALUE) {
-            return PaintServer.convertColor(v, f);
+            //CRP: 'ctx' param added for conversion.
+        	return PaintServer.convertColor(v, f, ctx);
         } else {
             return PaintServer.convertRGBICCColor
                 (e, v.item(0), (ICCColor)v.item(1), f, ctx);
@@ -861,7 +863,8 @@ public abstract class CSSUtilities
         Value o = getComputedStyle(e, SVGCSSEngine.STOP_OPACITY_INDEX);
         opacity *= PaintServer.convertOpacity(o);
         if (v.getCssValueType() == CSSValue.CSS_PRIMITIVE_VALUE) {
-            return PaintServer.convertColor(v, opacity);
+            // CRP: 'ctx' param added for conversion.
+        	return PaintServer.convertColor(v, opacity, ctx);
         } else {
             return PaintServer.convertRGBICCColor
                 (e, v.item(0), (ICCColor)v.item(1), opacity, ctx);

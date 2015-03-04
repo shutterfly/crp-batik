@@ -36,6 +36,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -53,6 +54,8 @@ import org.apache.batik.gvt.renderer.StaticRenderer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.svg.SVGDocument;
+
+import com.shutterfly.crp.common.SflyColor;
 
 /**
  *
@@ -81,7 +84,8 @@ public class Main extends JComponent {
         renderer  = new StaticRenderer();
         userAgent = ua;
         loader    = new DocumentLoader(userAgent);
-        ctx       = new BridgeContext(userAgent, loader);
+        // CRP: Bridge Context now needs a color mapping
+        ctx = new BridgeContext(userAgent, loader, new HashMap<String, SflyColor>());
         ua.setBridgeContext(ctx);
 
         if (size == null) {

@@ -19,7 +19,8 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfWriter;
 
 /**
- * A node that holds a Graphics2D image.
+ * CRP: class added.
+ * A node that holds a Graphics2D-image-equivalent for image tags with link to .pdf files.
  */
 public class PDFImageNode extends AbstractGraphicsNode {
 
@@ -71,21 +72,7 @@ public class PDFImageNode extends AbstractGraphicsNode {
 	    	
 	    	img.setAlignment(com.itextpdf.text.Element.ALIGN_MIDDLE);
 	    	
-	    	//removed. see below comments
-	    	//String rotationDegrees = ((Element)e.getParentNode()).getAttributeNodeNS("http://www.shutterfly.com/module/layout/v5","rotationEnum").getValue();
-	    	//float deg=Float.parseFloat(rotationDegrees);
-	    	//img.setRotationDegrees(deg);
-	    	
-	    	//position
-	    	//String x = e.getAttribute("x");
-	    	//String y = e.getAttribute("y");
-	    	//float xfloat = Float.parseFloat(x);
-	    	//float yfloat = Float.parseFloat(y);
-	    	
             AffineTransform relativePositionTransform= new AffineTransform();
-            
-            //removed. See below comments
-            //relativePositionTransform.translate(xfloat, yfloat);
             
             //draw with identity transform. 
             // This PDFImage node is child of a Image node in the GVT(batiks internal rep of SVG) tree and the parent ImageNode applies the transform from svg's <image transform=(..)>

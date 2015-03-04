@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -57,6 +58,8 @@ import org.apache.batik.util.SVGConstants;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.svg.SVGSVGElement;
+
+import com.shutterfly.crp.common.SflyColor;
 
 /**
  * This class may be the base class of all transcoders which take an
@@ -327,14 +330,15 @@ public abstract class SVGAbstractTranscoder extends XMLAbstractTranscoder {
     /**
      * Creates the BridgeContext. Subclass this method to provide customized bridges. For example,
      * Apache FOP uses this method to register special bridges for optimized text painting.
+     * CRP: Sfly workflow does not use this method, so does not need color mapping; passing empty
      * @param svgVersion the SVG version in use (ex. "1.0", "1.x" or "1.2")
      * @return the newly instantiated BridgeContext
      */
     protected BridgeContext createBridgeContext(String svgVersion) {
         if ("1.2".equals(svgVersion)) {
-            return new SVG12BridgeContext(userAgent);
+            return new SVG12BridgeContext(userAgent, new HashMap<String, SflyColor>());
         } else {
-            return new BridgeContext(userAgent);
+            return new BridgeContext(userAgent, new HashMap<String, SflyColor>());
         }
     }
 

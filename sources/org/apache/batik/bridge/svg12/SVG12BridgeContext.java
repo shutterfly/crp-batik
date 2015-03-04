@@ -19,6 +19,7 @@
 package org.apache.batik.bridge.svg12;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.batik.bridge.BridgeContext;
 import org.apache.batik.bridge.BridgeUpdateHandler;
@@ -48,6 +49,7 @@ import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.svg.SVGDocument;
+import com.shutterfly.crp.common.SflyColor;
 
 /**
  * Bridge context for SVG 1.2 documents.  This is primarily for dispatching
@@ -84,35 +86,42 @@ public class SVG12BridgeContext extends BridgeContext {
      */
     protected boolean mouseCaptureAutoRelease;
 
-    /**
-     * Constructs a new bridge context.
-     * @param userAgent the user agent
-     */
-    public SVG12BridgeContext(UserAgent userAgent) {
-        super(userAgent);
-    }
+	/**
+	 * Constructs a new bridge context.
+	 * CRP: changed constructor to be compatible with supertype; now it takes color mapping.
+	 * @param userAgent
+	 *            the user agent
+	 */
+	public SVG12BridgeContext(UserAgent userAgent, Map<String, SflyColor> rgb_svgToCmyk) {
+		super(userAgent, rgb_svgToCmyk);
+	}
 
-    /**
-     * Constructs a new bridge context.
-     * @param userAgent the user agent
-     * @param loader document loader
-     */
-    public SVG12BridgeContext(UserAgent userAgent,
-                              DocumentLoader loader) {
-        super(userAgent, loader);
-    }
+	/**
+	 * Constructs a new bridge context.
+	 * CRP: changed constructor to be compatible with supertype; now it takes color mapping.
+	 * @param userAgent
+	 *            the user agent
+	 * @param loader
+	 *            document loader
+	 */
+	public SVG12BridgeContext(UserAgent userAgent, DocumentLoader loader, Map<String, SflyColor> rgb_svgToCmyk) {
+		super(userAgent, loader, rgb_svgToCmyk);
+	}
 
-    /**
-     * Constructs a new bridge context.
-     * @param userAgent the user agent
-     * @param interpreterPool the interpreter pool
-     * @param documentLoader document loader
-     */
-    public SVG12BridgeContext(UserAgent userAgent,
-                              InterpreterPool interpreterPool,
-                              DocumentLoader documentLoader) {
-        super(userAgent, interpreterPool, documentLoader);
-    }
+	/**
+	 * Constructs a new bridge context.
+	 * CRP: changed constructor to be compatible with supertype; now it takes color mapping.
+	 * @param userAgent
+	 *            the user agent
+	 * @param interpreterPool
+	 *            the interpreter pool
+	 * @param documentLoader
+	 *            document loader
+	 */
+	public SVG12BridgeContext(UserAgent userAgent, InterpreterPool interpreterPool, DocumentLoader documentLoader,
+			Map<String, SflyColor> rgb_svgToCmyk) {
+		super(userAgent, interpreterPool, documentLoader, rgb_svgToCmyk);
+	}
 
     /**
      * Returns a new URIResolver object.

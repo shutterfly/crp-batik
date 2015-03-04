@@ -110,13 +110,17 @@ import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ByteBuffer;
+import com.itextpdf.text.pdf.CMYKColor;
 import com.itextpdf.text.pdf.PdfAction;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfPatternPainter;
 import com.itextpdf.text.pdf.PdfShading;
 import com.itextpdf.text.pdf.PdfShadingPattern;
+import com.itextpdf.text.pdf.PdfSpotColor;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.SpotColor;
+import com.shutterfly.crp.common.SflyColor;
 
 public class PdfGraphics2DExt extends Graphics2D {
 
@@ -707,7 +711,13 @@ public class PdfGraphics2DExt extends Graphics2D {
 
 			if (co.getRule() == 3) {
 				Color c = (Color) paint;
-				this.paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (c.getAlpha() * alpha));
+				// CRP: if input was an Sfly color, construct/set Sfly color.
+				if ((c instanceof ColorExt) && (((ColorExt) c).getSflyColor() != null)) {
+					SflyColor sflyColor = ((ColorExt) c).getSflyColor();
+					this.paint = new ColorExt(sflyColor, c.getRed(), c.getGreen(), c.getBlue(), (int) (c.getAlpha() * alpha));
+				} else {
+					this.paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (c.getAlpha() * alpha));
+				}
 				realPaint = paint;
 			}
 		}
@@ -1762,7 +1772,8 @@ public class PdfGraphics2DExt extends Graphics2D {
                     }
                     cb.setGState(gs);
                 }
-                cb.setColorFill(new BaseColor(color.getRGB()));
+                //CRP: try to get sfly mapped color for vector
+                cb.setColorFill(getBaseColor(color));
             }
             else {
                 if (alpha != currentStrokeGState) {
@@ -1775,7 +1786,8 @@ public class PdfGraphics2DExt extends Graphics2D {
                     }
                     cb.setGState(gs);
                 }
-                cb.setColorStroke(new BaseColor(color.getRGB()));
+                //CRP: try to get sfly mapped color for vector
+                cb.setColorStroke(getBaseColor(color));
             }
         }
         else if (paint instanceof GradientPaint) {
@@ -1859,6 +1871,25 @@ public class PdfGraphics2DExt extends Graphics2D {
         }
     }
 
+	/**
+	 * CRP: method added. If we had set our own color object during svg parsing, 
+	 * then we use that info to get non-rgb color for painting to pdf.
+	 * See PaintServer.convertColor.
+	 * @param color the java2d color
+	 * @return baseColor the itext's color
+	 */
+	private BaseColor getBaseColor(Color color) {
+		if ((color instanceof ColorExt) && (((ColorExt) color).getSflyColor() != null)) {
+			SflyColor sflyColor = ((ColorExt) color).getSflyColor();
+			CMYKColor cmykColor = new CMYKColor(sflyColor.getC(), sflyColor.getM(), sflyColor.getY(), sflyColor.getK());
+			// return cmykColor;
+			PdfSpotColor cmyk = new PdfSpotColor(sflyColor.getColorId(), cmykColor);
+			return new SpotColor(cmyk, 1.0f);
+		}
+
+		return new BaseColor(color.getRGB());
+	}
+    
     private synchronized void waitForImage(java.awt.Image image) {
         if (mediaTracker == null)
             mediaTracker = new MediaTracker(new PdfGraphics2DExt.FakeComponent());

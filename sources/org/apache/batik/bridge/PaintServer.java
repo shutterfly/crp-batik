@@ -42,6 +42,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSValue;
 
+import com.shutterfly.crp.common.SflyColor;
+
 /**
  * A collection of utility methods to deliver <tt>java.awt.Paint</tt>,
  * <tt>java.awt.Stroke</tt> objects that could be used to paint a
@@ -253,7 +255,8 @@ public abstract class PaintServer
                 return null; // none
 
             case CSSPrimitiveValue.CSS_RGBCOLOR:
-                return convertColor(paintDef, opacity);
+                // CRP: 'ctx' param added for conversion
+            	return convertColor(paintDef, opacity, ctx);
 
             case CSSPrimitiveValue.CSS_URI:
                 return convertURIPaint(paintedElement,
@@ -287,7 +290,8 @@ public abstract class PaintServer
 
                 case CSSPrimitiveValue.CSS_RGBCOLOR:
                     if (paintDef.getLength() == 2) {
-                        return convertColor(v, opacity);
+                        // CRP: 'ctx' param added for conversion.
+                    	return convertColor(v, opacity, ctx);
                     } else {
                         return convertRGBICCColor(paintedElement, v,
                                                   (ICCColor)paintDef.item(2),
@@ -384,7 +388,8 @@ public abstract class PaintServer
             color = convertICCColor(paintedElement, iccColor, opacity, ctx);
         }
         if (color == null){
-            color = convertColor(colorDef, opacity);
+        	// CRP: 'ctx' param added for conversion.
+            color = convertColor(colorDef, opacity, ctx);
         }
         return color;
     }
@@ -437,17 +442,27 @@ public abstract class PaintServer
         return new Color(rgb[0], rgb[1], rgb[2], opacity);
     }
 
-    /**
-     * Converts the given Value and opacity to a Color object.
-     * @param c The CSS color to convert.
-     * @param opacity The opacity value (0 &lt;= o &lt;= 1).
-     */
-    public static Color convertColor(Value c, float opacity) {
-        int r = resolveColorComponent(c.getRed());
-        int g = resolveColorComponent(c.getGreen());
-        int b = resolveColorComponent(c.getBlue());
-        return new Color(r, g, b, Math.round(opacity * 255f));
-    }
+	/**
+	 * Converts the given Value and opacity to a Color object.
+	 * CRP: change is to take context.
+	 * @param c
+	 *            The CSS color to convert.
+	 * @param opacity
+	 *            The opacity value (0 &lt;= o &lt;= 1).
+	 * @param ctx
+	 * 		      The BridgeContext
+	 */
+	public static Color convertColor(Value c, float opacity, BridgeContext ctx) {
+		int r = resolveColorComponent(c.getRed());
+		int g = resolveColorComponent(c.getGreen());
+		int b = resolveColorComponent(c.getBlue());
+
+		// CRP: for color in svg(vectors), stick in cmyk info into extended java.awt.Color(ColorExt).
+		String rgbHex = String.format("%02X%02X%02X", r, g, b);
+		SflyColor sflyColor = ctx.getRgb_svgToCmyk().get(rgbHex);
+		return new ColorExt(sflyColor, r, g, b, Math.round(opacity * 255f));
+		// return new Color(r, g, b, Math.round(opacity * 255f));
+	}
 
     /////////////////////////////////////////////////////////////////////////
     // java.awt.stroke
