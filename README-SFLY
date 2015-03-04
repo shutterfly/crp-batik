@@ -1,0 +1,36 @@
+
+--------------------------------------------
+Shutterfly Batik 1.7 modifications for the Common Rendering Platform. 
+--------------------------------------------
+
+We are making an effort to flag all the CRP changes to batik, primarily so that we can easily distinguish
+CRP-based logic from original Batik logic. (Else things can get quite confusing while reading the code.)
+
+
+Conventions for CRP-based modifications:
+--------------------------------------------
+
+Please use the following annotations when modifying original Batik code.
+
+
+- To flag one or two lines of code that have CRP mods. 
+// CRP: <comment> 
+
+
+- To flag a larger block of code that has CRP mods.
+// Begin CRP: <comment>
+    <code added for CRP>
+// End CRP
+
+
+- To flag a CRP TODO. 
+// CRP TODO: <comment>
+
+
+- To flag a class added for CRP.
+/**
+ * CRP: class added. 
+ *
+ * <class description>
+ */
+
