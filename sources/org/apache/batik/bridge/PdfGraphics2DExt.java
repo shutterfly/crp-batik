@@ -103,6 +103,8 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 
+import org.apache.log4j.Logger;
+
 import com.itextpdf.awt.DefaultFontMapper;
 import com.itextpdf.awt.FontMapper;
 import com.itextpdf.awt.geom.PolylineShape;
@@ -124,6 +126,7 @@ import com.shutterfly.crp.common.SflyColor;
 
 public class PdfGraphics2DExt extends Graphics2D {
 
+	Logger logger = Logger.getLogger(PdfGraphics2DExt.class);
     private static final int FILL = 1;
     private static final int STROKE = 2;
     private static final int CLIP = 3;
@@ -1881,8 +1884,11 @@ public class PdfGraphics2DExt extends Graphics2D {
 	private BaseColor getBaseColor(Color color) {
 		if ((color instanceof ColorExt) && (((ColorExt) color).getSflyColor() != null)) {
 			SflyColor sflyColor = ((ColorExt) color).getSflyColor();
-			CMYKColor cmykColor = new CMYKColor(sflyColor.getC(), sflyColor.getM(), sflyColor.getY(), sflyColor.getK());
-			// return cmykColor;
+			CMYKColor cmykColor = new CMYKColor(sflyColor.getC() / 100.0f, sflyColor.getM() / 100.0f, sflyColor.getY() / 100.0f, sflyColor.getK() / 100.0f);
+			if (sflyColor.getColorId() == null || sflyColor.getColorId().trim().equals("")) {
+				logger.warn(String.format("vector asset using color outside of global content colors: %s", sflyColor.getRgb_svg()));
+				return cmykColor;
+			}
 			PdfSpotColor cmyk = new PdfSpotColor(sflyColor.getColorId(), cmykColor);
 			return new SpotColor(cmyk, 1.0f);
 		}

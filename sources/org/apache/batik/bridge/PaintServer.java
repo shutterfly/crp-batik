@@ -23,6 +23,13 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.batik.css.engine.SVGCSSEngine;
 import org.apache.batik.css.engine.value.Value;
@@ -38,6 +45,7 @@ import org.apache.batik.gvt.ShapePainter;
 import org.apache.batik.gvt.StrokeShapePainter;
 import org.apache.batik.util.CSSConstants;
 import org.apache.batik.util.SVGConstants;
+import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSValue;
@@ -61,6 +69,31 @@ public abstract class PaintServer
      */
     protected PaintServer() {}
 
+	// Begin CRP: Initialize ICC profiles
+	private static String rgbProfile = "sRGB Color Space Profile.icm";
+	private static String cmykProfile = "USWebCoatedSWOP.icc";
+	private static Map<String, ICC_ColorSpace> colorSpaces = new HashMap<String, ICC_ColorSpace>();
+	private static List<String> colorSpaceNames = Arrays.asList(new String[] { rgbProfile, cmykProfile });
+	private static Logger logger = Logger.getLogger(PaintServer.class);
+	static {
+		initProfiles();
+	}
+	
+	private static void initProfiles(){
+		if (colorSpaces.size() == 0) {
+			for (String colorSpaceName : colorSpaceNames) {
+				try {
+					InputStream profileInputStream = ColorExt.class.getResourceAsStream("resources/"+colorSpaceName);
+					ICC_ColorSpace colorSpace = new ICC_ColorSpace(ICC_Profile.getInstance(profileInputStream));
+					colorSpaces.put(colorSpaceName, colorSpace);
+				} catch (Exception ex) {
+					logger.fatal("Could not initialize ICC profile needed for color conversion", ex);
+					throw new RuntimeException("Could not initialize ICC profile needed for color conversion", ex);
+				}
+			}
+		}
+	}
+	// End CRP
 
     /////////////////////////////////////////////////////////////////////////
     // 'marker-start', 'marker-mid', 'marker-end' delegates to the PaintServer
@@ -460,10 +493,29 @@ public abstract class PaintServer
 		// CRP: for color in svg(vectors), stick in cmyk info into extended java.awt.Color(ColorExt).
 		String rgbHex = String.format("%02X%02X%02X", r, g, b);
 		SflyColor sflyColor = ctx.getRgb_svgToCmyk().get(rgbHex);
+		if (sflyColor == null) {
+			sflyColor = convertToCmykUsingProfile(r, g, b, rgbProfile, cmykProfile);
+		}
 		return new ColorExt(sflyColor, r, g, b, Math.round(opacity * 255f));
 		// return new Color(r, g, b, Math.round(opacity * 255f));
 	}
 
+	// CRP: 
+	static SflyColor convertToCmykUsingProfile(int r, int g, int b, String rgbProfile, String cmykProfile) {
+		SflyColor sflyColor = new SflyColor();
+		sflyColor.setRgb_svg(String.format("%02X%02X%02X", r, g, b));
+		ICC_ColorSpace rgbColorSpace = colorSpaces.get(rgbProfile);
+		ICC_ColorSpace cmykColorSpace = colorSpaces.get(cmykProfile);
+		float[] rgbFloats = new float[] { r/255.0f, g/255.0f, b/255.0f };
+		float[] ciexyz = rgbColorSpace.toCIEXYZ(rgbFloats);
+		float[] cmykFloats = cmykColorSpace.fromCIEXYZ(ciexyz);
+		sflyColor.setC(Math.round(100*cmykFloats[0]));
+		sflyColor.setM(Math.round(100*cmykFloats[1]));
+		sflyColor.setY(Math.round(100*cmykFloats[2]));
+		sflyColor.setK(Math.round(100*cmykFloats[3]));
+		return sflyColor;
+	}
+	
     /////////////////////////////////////////////////////////////////////////
     // java.awt.stroke
     /////////////////////////////////////////////////////////////////////////
