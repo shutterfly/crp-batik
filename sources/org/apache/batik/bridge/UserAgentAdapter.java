@@ -126,6 +126,9 @@ public class UserAgentAdapter implements UserAgent {
      * Returns the size of a px CSS unit in millimeters.
      */
     public float getPixelUnitToMillimeter() {
+    	// @@@ CRP TODO: CSS units are defined as 96dpi. We need another strategy here.
+    	// Here's problem: itext deals with 72dpi, but batik is dealing with 96. 
+    	
         //return 0.26458333333333333333333333333333f; // 96dpi
     	//SFLY Changes: IText uses 72dpi for pixel to inch/mm translation. Making batik and IText compatible
     	return 0.35277777777f;//72dpi

@@ -11,6 +11,9 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Element;
 
+/**
+ * CRP: Class added for debugging purposes only.
+ */
 public class XMLNodeToString {
 
 	public static String convertToString(Element node){

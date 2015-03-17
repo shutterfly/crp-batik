@@ -16,6 +16,8 @@ Please use the following annotations when modifying original Batik code.
 - To flag one or two lines of code that have CRP mods. 
 // CRP: <comment> 
 
+- To add a comment the original batik code:
+// CRP comment: <comment>
 
 - To flag a larger block of code that has CRP mods.
 // Begin CRP: <comment>

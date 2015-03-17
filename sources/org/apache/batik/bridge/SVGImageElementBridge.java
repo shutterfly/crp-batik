@@ -121,20 +121,8 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         if (node == null) {
             SVGImageElement ie = (SVGImageElement) e;
             String uriStr = ie.getHref().getAnimVal();
-/*            try{
-            	String fileName = new File(uriStr).getName();
-            	fileName=fileName.replaceAll("-fetch", "").replaceAll("orig-v2", "svg");
-            	File file = new File("/var/sfsite/assets",fileName);
-            	if(file.exists()){
-            		System.out.println("local asset: "+file.getAbsolutePath());
-            		uriStr=file.getAbsolutePath();
-            	}
-            }catch(Exception ex){
-            	
-            }*/
-            return null;
-            //@@@CRP: Ankit. This is temporary only to keep rendering if few svg assets in page are not available. TODO: remove
-            //throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,new Object[] {uriStr});
+            throw new BridgeException(ctx, e, ERR_URI_IMAGE_INVALID,
+                    				  new Object[] {uriStr});
         }
 
         imageNode.setImage(node);
@@ -168,25 +156,13 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
 
         // 'xlink:href' attribute - required
         String uriStr = ie.getHref().getAnimVal();
-/*        try{
-        	String fileName = new File(uriStr).getName();
-        	fileName=fileName.replaceAll("-fetch", "").replaceAll("orig-v2", "svg");
-        	File file = new File("/var/sfsite/assets",fileName);
-        	if(file.exists()){
-        		System.out.println("local asset: "+file.getAbsolutePath());
-        		uriStr=file.getAbsolutePath();
-        	}
-        }catch(Exception ex){
-        	
-        }*/
         if (uriStr.length() == 0) {
-        	return null;
-            //throw new BridgeException(ctx, e, ERR_ATTRIBUTE_MISSING, new Object[] {"xlink:href"});
+            throw new BridgeException(ctx, e, ERR_ATTRIBUTE_MISSING, 
+            						  new Object[] {"xlink:href"});
         }
         if (uriStr.indexOf('#') != -1) {
-            return null;
-            //@@@CRP: Ankit. This is temporary and only to let the rendering continue even if some svg assets are missing. TODO: remove
-        	//throw new BridgeException(ctx, e, ERR_ATTRIBUTE_VALUE_MALFORMED, new Object[] {"xlink:href", uriStr});
+            throw new BridgeException(ctx, e, ERR_ATTRIBUTE_VALUE_MALFORMED,
+                    				  new Object[] {"xlink:href", uriStr});
         }
 
         // Build the URL.
@@ -197,22 +173,20 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         } else {
             purl = new ParsedURL(baseURI, uriStr);
         }
-        //@@@CRP: Ankit. start:SFLY changes to support .pdf just like .png or .jpeg images in svg
-        if(purl.toString().endsWith(".pdf")){
+        
+        // Begin CRP: changes to support .pdf just like .png or .jpeg images in svg.
+        if (purl.toString().endsWith(".pdf")) {
         	return createPDFGraphicsNode(ctx,e,purl);
         }
-        //end:SFLY
-        if(purl==null || purl.toString() == null || purl.toString().trim().equals("")){
-        	//@@@CRP: Ankit. This is temporary, for svg image tags without image links. TODO: remove
-        	//image url is empty do nothing
-        	return null;
-        }
+        // End CRP
+        
         return createImageGraphicsNode(ctx, e, purl);
     }
 
-    ///@@@CRP: Ankit. start:SFLY changes to support .pdf just like .png or .jpeg images in svg
+    // Begin CRP: changes to support .pdf (eg., for web2print) just like .png or .jpeg images in svg.
     private GraphicsNode createPDFGraphicsNode(BridgeContext ctx, Element e,
 			ParsedURL purl) {
+    	
     	PDFImageNode gnode = new PDFImageNode(ctx,e,purl);
     	Rectangle2D bounds=getImageBounds(ctx, e);//svg image tag's height and width
 
@@ -248,7 +222,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         initializeViewport(ctx, e, gnode, vb, bounds);
 		return gnode;
 	}
-    //end:SFLY
+    // End CRP
 
     protected GraphicsNode createImageGraphicsNode(BridgeContext ctx,
                                                    Element e,
@@ -446,6 +420,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         throws IOException {
         List mimeTypes = new ArrayList
             (ImageTagRegistry.getRegistry().getRegisteredMimeTypes());
+        // CRP: This is bug fix fixed in batik trunk, but not in 1.7.
         mimeTypes.addAll(Arrays.asList(MimeTypeConstants.MIME_TYPES_SVG));
         InputStream reference = purl.openStream(mimeTypes.iterator());
         return new ProtectedStream(reference);

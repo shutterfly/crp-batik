@@ -124,6 +124,21 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.SpotColor;
 import com.shutterfly.crp.common.SflyColor;
 
+/**
+ * CRP: class added.
+ * This class was copied from PdfGraphics2D.java in itext library: 
+ * itextpdf code version 5.5.5.
+ * 
+ * We are putting it in the Batik code tree, but it may be better to move it
+ * to an "itext modifications" code tree later.
+ * 
+ * Reasoning for iText over FOP: we use iText for pdf generation over FOP as iText 
+ * gives us more flexibilty. For example, it lets us emit a pdf file (for text areas) 
+ * into to the output pdf. 
+ * 
+ * This class is instantiated by  CRP BatikRenderUtils (instead of 
+ * PdfGraphics2D) because we require CRP-specific mods here.
+ */
 public class PdfGraphics2DExt extends Graphics2D {
 
 	Logger logger = Logger.getLogger(PdfGraphics2DExt.class);
@@ -1584,8 +1599,11 @@ public class PdfGraphics2DExt extends Graphics2D {
         result.concatenate(transform);
         return result;
     }
-
+    
     private boolean drawImage(Image img, Image mask, AffineTransform xform, Color bgColor, ImageObserver obs) {
+    	
+    	// CRP: Recall that this class is from original iText (not from original Batik.)
+    	
         if (xform==null)
             xform = new AffineTransform();
         else
@@ -1611,25 +1629,44 @@ public class PdfGraphics2DExt extends Graphics2D {
         }
 
         try {
-            com.itextpdf.text.Image image = null;
-            boolean hasTransparency=true;//assume transparent if not know
-            if(img instanceof BufferedImage){
-            	BufferedImage buffImg = (BufferedImage)img;
-            	if (!buffImg.getColorModel().hasAlpha()) {
-            		hasTransparency=false;
-            	}
-            }
             
-			if (!convertImagesToJPEG || hasTransparency) {
+			// CRP comment: analysis notes:
+            // See "iText in Action", section 10.2.6.
+            //
+			// Reference page: project 77fb01af-555f-11e4-9014-f3e30d43d2cf page: 11. 
+			// This page contains two jpeg photos. 
+            // The original image(s) colorspace (via Photoshop > Image > Mode): RGB 8 bit per channel.
+            // 
+            // The following information comes from the object inspector in 
+            // PDF as of March 2015. "Image downsampled = No" means that the pixel
+            // size in the pdf is the same pixel size as the fetched image.
+            // Notes: 
+            // o  The "Compression" scheme is given by "filters" in the object inspector.
+            // o  For the createJPEG path, the jpegQuality is 0.95 for these stats.
+            // o  No CRP watermark is used for these (size) numbers.
+            // o  The highest compressionLevel (9) is used for these values.
+            //
+  			// 									Image 			Image 			Compression	
+			// Approach				 PDF size   downsampled?	ColorSpace 		Scheme ("filters")
+			// --------------------	---------	-------------	-------------  ------------
+			// itext's getInstance	3858KB		No				RGB				zlib/defate
+			// createJPEG 			364KB		No				RGB				JPEG
+			// IDS via Arf tool 	1057KB		No				CMYK			JPEG
+            //
+            // TODO: test for gif, png w/transparency and tiff.
+            com.itextpdf.text.Image image = null;
+			if (!convertImagesToJPEG) {
+				// CRP comment: this code converts from the java.awt.Image to a 
+				// com.itextpdf.text.Image.
 				image = com.itextpdf.text.Image.getInstance(img, bgColor);
 			}
-
 			else {
-				if (hasTransparency) {
-					//image = createPNG(img);
-				} else {
-					image = createJPEG(img);
-				}
+				// CRP comment: this code rasterizes the given java.awt.Image (jpeg or not)
+				// and then JPEG encodes the raster. It then invokes com.itextpdf.text.Image.getInstance
+				// to return a com.itextpdf.text.Image for the JPEG.
+				// The resultant size of the PDF is 10x smaller (364KB as per above) when doing this,
+				// but it seems it would add loss.
+				image = createJPEG(img);
 			}
             if (mask!=null) {
                 com.itextpdf.text.Image msk = com.itextpdf.text.Image.getInstance(mask, null, true);
@@ -1653,7 +1690,6 @@ public class PdfGraphics2DExt extends Graphics2D {
         return true;
     }
 
-
 /*	private com.itextpdf.text.Image createPNG(Image img) throws IOException, BadElementException  {
 		com.itextpdf.text.Image image;
 		BufferedImage scaled = new BufferedImage(img.getWidth(null),
@@ -1674,6 +1710,10 @@ public class PdfGraphics2DExt extends Graphics2D {
 	
 	private com.itextpdf.text.Image createJPEG(Image img) throws IOException,
 			BadElementException, MalformedURLException {
+		
+		// CRP comment: this code rasterizes the given java.awt.Image (jpeg or not) using g3.drawImage
+		// and then JPEG encodes the raster. It then returns a com.itextpdf.text.Image for the 
+		// JPEG.
 		com.itextpdf.text.Image image;
 		BufferedImage scaled = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
 		Graphics2D g3 = scaled.createGraphics();

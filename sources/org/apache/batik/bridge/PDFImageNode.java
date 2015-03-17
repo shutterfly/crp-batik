@@ -19,11 +19,15 @@ import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfWriter;
 
 /**
- * CRP: class added.
- * A node that holds a Graphics2D-image-equivalent for image tags with link to .pdf files.
+ * CRP: added class.
+ * 
+ * This is to handle case where the SVG image refers to a pdf file (such as for web2print.)
+ * (Default batik doesn't know how to deal with pdf images.) See also
+ * See also SVGImageElementBridge, where this is created.
+ * 
+ * This is a node that holds a Graphics2D image for PDF. 
  */
 public class PDFImageNode extends AbstractGraphicsNode {
-
 
 	private BridgeContext ctx;
 	private Element e;
@@ -79,15 +83,9 @@ public class PDFImageNode extends AbstractGraphicsNode {
             
             pdfG2d.drawPDfImage(img, relativePositionTransform);
 	    	
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (DocumentException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		} catch (Exception ex) {
+			throw new RuntimeException("Failed to paint image PDF: " + url, ex);
 		}
-
-
     }
 
     /** {@inheritDoc} */
@@ -97,7 +95,7 @@ public class PDFImageNode extends AbstractGraphicsNode {
 
     /** {@inheritDoc} */
     public Rectangle2D getPrimitiveBounds() {
-    	//SFLY:: TODO
+    	// CRP TODO: Fix this. 
         return new Rectangle2D.Double(0, 0,
                 boundaryRectangle.getWidth(),
                 boundaryRectangle.getHeight());
