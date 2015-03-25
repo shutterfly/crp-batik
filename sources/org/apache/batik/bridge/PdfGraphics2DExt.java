@@ -1925,12 +1925,17 @@ public class PdfGraphics2DExt extends Graphics2D {
 		if ((color instanceof ColorExt) && (((ColorExt) color).getSflyColor() != null)) {
 			SflyColor sflyColor = ((ColorExt) color).getSflyColor();
 			CMYKColor cmykColor = new CMYKColor(sflyColor.getC() / 100.0f, sflyColor.getM() / 100.0f, sflyColor.getY() / 100.0f, sflyColor.getK() / 100.0f);
+			return cmykColor;
+			// not ready for spot color yet
+			/*
 			if (sflyColor.getColorId() == null || sflyColor.getColorId().trim().equals("")) {
 				logger.warn(String.format("vector asset using color outside of global content colors: %s", sflyColor.getRgb_svg()));
 				return cmykColor;
 			}
 			PdfSpotColor cmyk = new PdfSpotColor(sflyColor.getColorId(), cmykColor);
 			return new SpotColor(cmyk, 1.0f);
+			*/
+			//not ready for spot color yet.
 		}
 
 		return new BaseColor(color.getRGB());
