@@ -35,9 +35,12 @@
 	    	<plugin>
 	      		<groupId>org.apache.maven.plugins</groupId>
 	      		<artifactId>maven-compiler-plugin</artifactId>
-	      		<version>3.3</version> 
-
+	      		<version>3.3</version>
 	      		<configuration>
+					<fork>true</fork>
+					<compilerArgs>
+						<arg>-XDignore.symbol.file</arg>
+					</compilerArgs>
 					<!-- The following is to work around errors "package com.sun.image.codec.jpeg does not exist" 
 					when building on the command line. 
 					See http://stackoverflow.com/questions/1906673/import-com-sun-image-codec-jpeg 
@@ -73,6 +76,11 @@
  	</build>
  	
 	<dependencies>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
@@ -112,9 +120,9 @@
 		<dependency>  
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-	        <version>1.6.1</version>
+	        <version>1.7.8</version>
         </dependency>
-        <dependency> 
+        <dependency>   
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
 	        <version>1.6.1</version>
