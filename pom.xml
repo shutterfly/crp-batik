@@ -30,7 +30,7 @@
 			<resource><directory>resources</directory></resource>
 		</resources>
 		
-		<!-- Exclude some files from build. (Just too much headache to build it.)-->
+		<!-- Exclude some files from build. (Just too much headache to build it.) -->
 	  	<plugins>
 	    	<plugin>
 	      		<groupId>org.apache.maven.plugins</groupId>
@@ -41,7 +41,19 @@
 					<compilerArgs>
 						<arg>-XDignore.symbol.file</arg>
 					</compilerArgs>
-	        		<excludes>
+					<!-- The following is to work around errors "package com.sun.image.codec.jpeg does not exist" 
+					when building on the command line. 
+					See http://stackoverflow.com/questions/1906673/import-com-sun-image-codec-jpeg 
+					Also, in your path make sure JAVA_HOME/bin comes first. Otherwise mvn will use /usr/bin/javac
+					when forking.
+					-->
+					<fork>true</fork>
+					<compilerArgs>
+						<arg>-XDignore.symbol.file</arg>
+					</compilerArgs> 
+	      		
+	      			<!-- Don't compile these. Too many dependencies. -->
+	        		<excludes>	        		
 	          			<exclude>org/apache/batik/script/jacl/*.java</exclude>
 	          			<exclude>org/apache/batik/script/jpython/*.java</exclude>
 	        		</excludes>
@@ -104,5 +116,16 @@
 	        <artifactId>xml-apis-ext</artifactId>
 	        <version>1.3.04</version>
 	    </dependency>
+	    
+		<dependency>  
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+	        <version>1.7.8</version>
+        </dependency>
+        <dependency>   
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+	        <version>1.6.1</version>
+        </dependency>
 	</dependencies>
 </project>
