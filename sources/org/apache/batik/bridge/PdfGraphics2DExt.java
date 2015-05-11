@@ -1655,6 +1655,11 @@ public class PdfGraphics2DExt extends Graphics2D {
             //
             // TODO: test for gif, png w/transparency and tiff.
             com.itextpdf.text.Image image = null;
+            
+            
+            convertImagesToJPEG = true;  // @@@@@@@@@@@@@@@
+            
+            
 			if (!convertImagesToJPEG) {
 				// CRP comment: this code converts from the java.awt.Image to a 
 				// com.itextpdf.text.Image.
@@ -1927,6 +1932,9 @@ public class PdfGraphics2DExt extends Graphics2D {
 			CMYKColor cmykColor = new CMYKColor(sflyColor.getC() / 100.0f, sflyColor.getM() / 100.0f, sflyColor.getY() / 100.0f, sflyColor.getK() / 100.0f);
 			return cmykColor;
 			// not ready for spot color yet
+			// Note that spot color currently fails on Epson 9900 (at least when transparency is present.)
+			// No good error message. Just: "Internal error during processing".
+
 			/*
 			if (sflyColor.getColorId() == null || sflyColor.getColorId().trim().equals("")) {
 				logger.warn(String.format("vector asset using color outside of global content colors: %s", sflyColor.getRgb_svg()));
