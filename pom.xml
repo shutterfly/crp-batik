@@ -30,18 +30,27 @@
 			<resource><directory>resources</directory></resource>
 		</resources>
 		
-		<!-- Exclude some files from build. (Just too much headache to build it.)-->
+		<!-- Exclude some files from build. (Just too much headache to build it.) -->
 	  	<plugins>
 	    	<plugin>
 	      		<groupId>org.apache.maven.plugins</groupId>
 	      		<artifactId>maven-compiler-plugin</artifactId>
-	      		<version>3.3</version>
+	      		<version>3.3</version> 
+
 	      		<configuration>
+					<!-- The following is to work around errors "package com.sun.image.codec.jpeg does not exist" 
+					when building on the command line. 
+					See http://stackoverflow.com/questions/1906673/import-com-sun-image-codec-jpeg 
+					Also, in your path make sure JAVA_HOME/bin comes first. Otherwise mvn will use /usr/bin/javac
+					when forking.
+					-->
 					<fork>true</fork>
 					<compilerArgs>
 						<arg>-XDignore.symbol.file</arg>
-					</compilerArgs>
-	        		<excludes>
+					</compilerArgs> 
+	      		
+	      			<!-- Don't compile these. Too many dependencies. -->
+	        		<excludes>	        		
 	          			<exclude>org/apache/batik/script/jacl/*.java</exclude>
 	          			<exclude>org/apache/batik/script/jpython/*.java</exclude>
 	        		</excludes>
@@ -64,11 +73,6 @@
  	</build>
  	
 	<dependencies>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
@@ -104,5 +108,16 @@
 	        <artifactId>xml-apis-ext</artifactId>
 	        <version>1.3.04</version>
 	    </dependency>
+	    
+		<dependency>  
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+	        <version>1.6.1</version>
+        </dependency>
+        <dependency> 
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+	        <version>1.6.1</version>
+        </dependency>
 	</dependencies>
 </project>
