@@ -63,7 +63,7 @@ public class PDFImageNode extends AbstractGraphicsNode {
 	/** {@inheritDoc} */
 	@Override
 	public void primitivePaint(Graphics2D g2d) {
-		if (url.endsWith(".pdf") && !(g2d instanceof PdfGraphics2DExt)) {
+		if ((url != null) && url.endsWith(".pdf") && !(g2d instanceof PdfGraphics2DExt)) {
 			logger.warn("graphics2D in use" + g2d.getClass().getName() + " does not support rendering pdf:" + purl);
 			return;
 		}
