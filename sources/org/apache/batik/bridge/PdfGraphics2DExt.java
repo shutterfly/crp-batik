@@ -1657,7 +1657,7 @@ public class PdfGraphics2DExt extends Graphics2D {
             com.itextpdf.text.Image image = null;
             
             
-            convertImagesToJPEG = false;  // @@@@@@@@@@@@@@@
+            convertImagesToJPEG = true;  // @@@@@@@@@@@@@@@
             
             
 			if (!convertImagesToJPEG) {
