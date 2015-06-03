@@ -61,11 +61,11 @@ import java.awt.Paint;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.RenderingHints.Key;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
 import java.awt.Transparency;
-import java.awt.RenderingHints.Key;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.font.TextAttribute;
@@ -119,10 +119,7 @@ import com.itextpdf.text.pdf.PdfGState;
 import com.itextpdf.text.pdf.PdfPatternPainter;
 import com.itextpdf.text.pdf.PdfShading;
 import com.itextpdf.text.pdf.PdfShadingPattern;
-import com.itextpdf.text.pdf.PdfSpotColor;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.SpotColor;
-import com.shutterfly.crp.common.SflyColor;
 
 /**
  * CRP: class added.
@@ -730,9 +727,10 @@ public class PdfGraphics2DExt extends Graphics2D {
 			if (co.getRule() == 3) {
 				Color c = (Color) paint;
 				// CRP: if input was an Sfly color, construct/set Sfly color.
-				if ((c instanceof ColorExt) && (((ColorExt) c).getSflyColor() != null)) {
-					SflyColor sflyColor = ((ColorExt) c).getSflyColor();
-					this.paint = new ColorExt(sflyColor, c.getRed(), c.getGreen(), c.getBlue(), (int) (c.getAlpha() * alpha));
+				if (c instanceof SflyColor) {
+					// CRP: Note that both SflyColor and it's base class Color are immutable, so no need to create a new
+					// color. Not sure why Alexej Suchov is creating a new color below.
+					this.paint = c;  
 				} else {
 					this.paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), (int) (c.getAlpha() * alpha));
 				}
@@ -1656,7 +1654,7 @@ public class PdfGraphics2DExt extends Graphics2D {
             // TODO: test for gif, png w/transparency and tiff.
             com.itextpdf.text.Image image = null;
             
-            
+// TODO: 06/02/15: keep around a while for fop experiments.            
             convertImagesToJPEG = true;  // @@@@@@@@@@@@@@@
             
             
@@ -1927,14 +1925,22 @@ public class PdfGraphics2DExt extends Graphics2D {
 	 * @return baseColor the itext's color
 	 */
 	private BaseColor getBaseColor(Color color) {
-		if ((color instanceof ColorExt) && (((ColorExt) color).getSflyColor() != null)) {
-			SflyColor sflyColor = ((ColorExt) color).getSflyColor();
-			CMYKColor cmykColor = new CMYKColor(sflyColor.getC() / 100.0f, sflyColor.getM() / 100.0f, sflyColor.getY() / 100.0f, sflyColor.getK() / 100.0f);
+		if (color instanceof SflyColor) {
+			SflyColor sflyColor = (SflyColor) color;
+			float[] cmyk = sflyColor.getComponents(null);
+			CMYKColor cmykColor = new CMYKColor(cmyk[0], cmyk[1], cmyk[2], cmyk[3]);
 			return cmykColor;
-			// not ready for spot color yet
-			// Note that spot color currently fails on Epson 9900 (at least when transparency is present.)
-			// No good error message. Just: "Internal error during processing".
 
+// TODO: 06/02/15 Keep Ankit's original code around a while.
+//		if ((color instanceof SflyColor) && (((SflyColor) color).getSflyColor() != null)) {
+//			SflyGlobalContentColor sflyColor = ((SflyColor) color).getSflyColor();
+//			CMYKColor cmykColor = new CMYKColor(sflyColor.getC() / 100.0f, sflyColor.getM() / 100.0f, sflyColor.getY() / 100.0f, sflyColor.getK() / 100.0f);
+//			return cmykColor;
+// END TODO:			
+			
+			// Begin: lab not ready for spot color yet. (Leave this code for later reference.)
+			// Note (also) that spot color currently fails on Epson 9900 (at least when transparency is present.)
+			// No good error message. Just: "Internal error during processing".
 			/*
 			if (sflyColor.getColorId() == null || sflyColor.getColorId().trim().equals("")) {
 				logger.warn(String.format("vector asset using color outside of global content colors: %s", sflyColor.getRgb_svg()));
@@ -1943,7 +1949,7 @@ public class PdfGraphics2DExt extends Graphics2D {
 			PdfSpotColor cmyk = new PdfSpotColor(sflyColor.getColorId(), cmykColor);
 			return new SpotColor(cmyk, 1.0f);
 			*/
-			//not ready for spot color yet.
+			// End: lab not ready for spot color yet.
 		}
 
 		return new BaseColor(color.getRGB());

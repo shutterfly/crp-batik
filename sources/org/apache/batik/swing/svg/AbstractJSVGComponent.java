@@ -32,6 +32,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +40,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.net.URL;
 
 import javax.swing.JOptionPane;
 
@@ -67,8 +67,8 @@ import org.apache.batik.gvt.CanvasGraphicsNode;
 import org.apache.batik.gvt.CompositeGraphicsNode;
 import org.apache.batik.gvt.GraphicsNode;
 import org.apache.batik.gvt.event.EventDispatcher;
-import org.apache.batik.gvt.text.Mark;
 import org.apache.batik.gvt.renderer.ImageRenderer;
+import org.apache.batik.gvt.text.Mark;
 import org.apache.batik.swing.gvt.GVTTreeRendererEvent;
 import org.apache.batik.swing.gvt.JGVTComponent;
 import org.apache.batik.swing.gvt.JGVTComponentListener;
@@ -77,14 +77,12 @@ import org.apache.batik.util.RunnableQueue;
 import org.apache.batik.util.SVGConstants;
 import org.apache.batik.util.SVGFeatureStrings;
 import org.apache.batik.util.XMLResourceDescriptor;
-import org.w3c.dom.Document;
 import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.svg.SVGAElement;
 import org.w3c.dom.svg.SVGDocument;
 import org.w3c.dom.svg.SVGSVGElement;
-
-import com.shutterfly.crp.common.SflyColor;
 
 /**
  * This class represents a swing component that can display SVG documents. This
@@ -865,11 +863,9 @@ public class AbstractJSVGComponent extends JGVTComponent {
         }
         BridgeContext result;
         if (doc.isSVG12()) {
-        	// CRP: This is not used by sfly workflow, it is fine without sfly color mapping.
-            result = new SVG12BridgeContext(userAgent, loader, new HashMap<String, SflyColor>());
+            result = new SVG12BridgeContext(userAgent, loader);
         } else {
-        	// CRP: This is not used by sfly workflow, it is fine without sfly color mapping.
-            result = new BridgeContext(userAgent, loader, new HashMap<String, SflyColor>());
+            result = new BridgeContext(userAgent, loader);
         }
         return result;
     }

@@ -174,7 +174,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
             purl = new ParsedURL(baseURI, uriStr);
         }
         
-        // Begin CRP: changes to support .pdf just like .png or .jpeg images in svg.
+        // Begin CRP: changes to support embedded .pdf in svg (such as for CLM text), just like .png or .jpeg images. 
         if (purl.toString().endsWith(".pdf")) {
         	return createPDFGraphicsNode(ctx,e,purl);
         }
@@ -183,7 +183,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         return createImageGraphicsNode(ctx, e, purl);
     }
 
-    // Begin CRP: changes to support .pdf (eg., for web2print) just like .png or .jpeg images in svg.
+    // Begin CRP: changes to support embedded .pdf in svg (such as for CLM text), just like .png or .jpeg images. 
     private GraphicsNode createPDFGraphicsNode(BridgeContext ctx, Element e,
 			ParsedURL purl) {
     	

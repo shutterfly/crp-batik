@@ -26,13 +26,13 @@ public class SflyGlobalColors {
 
 		}
 
-		List<SflyColor> color;
+		List<SflyGlobalColor> color;
 
-		public List<SflyColor> getColor() {
+		public List<SflyGlobalColor> getColor() { 
 			return color;
 		}
 
-		public void setColor(List<SflyColor> color) {
+		public void setColor(List<SflyGlobalColor> color) {
 			this.color = color;
 		}
 

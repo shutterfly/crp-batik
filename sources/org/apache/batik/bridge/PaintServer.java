@@ -23,13 +23,6 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
-import java.awt.color.ICC_ColorSpace;
-import java.awt.color.ICC_Profile;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.batik.css.engine.SVGCSSEngine;
 import org.apache.batik.css.engine.value.Value;
@@ -45,12 +38,9 @@ import org.apache.batik.gvt.ShapePainter;
 import org.apache.batik.gvt.StrokeShapePainter;
 import org.apache.batik.util.CSSConstants;
 import org.apache.batik.util.SVGConstants;
-import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSValue;
-
-import com.shutterfly.crp.common.SflyColor;
 
 /**
  * A collection of utility methods to deliver <tt>java.awt.Paint</tt>,
@@ -68,32 +58,6 @@ public abstract class PaintServer
      * No instance of this class is required.
      */
     protected PaintServer() {}
-
-	// Begin CRP: Initialize ICC profiles
-	private static String rgbProfile = "sRGB Color Space Profile.icm";
-	private static String cmykProfile = "USWebCoatedSWOP.icc";
-	private static Map<String, ICC_ColorSpace> colorSpaces = new HashMap<String, ICC_ColorSpace>();
-	private static List<String> colorSpaceNames = Arrays.asList(new String[] { rgbProfile, cmykProfile });
-	private static Logger logger = Logger.getLogger(PaintServer.class);
-	static {
-		initProfiles();
-	}
-	
-	private static void initProfiles(){
-		if (colorSpaces.size() == 0) {
-			for (String colorSpaceName : colorSpaceNames) {
-				try {
-					InputStream profileInputStream = ColorExt.class.getResourceAsStream("resources/"+colorSpaceName);
-					ICC_ColorSpace colorSpace = new ICC_ColorSpace(ICC_Profile.getInstance(profileInputStream));
-					colorSpaces.put(colorSpaceName, colorSpace);
-				} catch (Exception ex) {
-					logger.fatal("Could not initialize ICC profile needed for color conversion", ex);
-					throw new RuntimeException("Could not initialize ICC profile needed for color conversion", ex);
-				}
-			}
-		}
-	}
-	// End CRP
 
     /////////////////////////////////////////////////////////////////////////
     // 'marker-start', 'marker-mid', 'marker-end' delegates to the PaintServer
@@ -288,8 +252,7 @@ public abstract class PaintServer
                 return null; // none
 
             case CSSPrimitiveValue.CSS_RGBCOLOR:
-                // CRP: 'ctx' param added for conversion
-            	return convertColor(paintDef, opacity, ctx);
+            	return convertColor(paintDef, opacity);
 
             case CSSPrimitiveValue.CSS_URI:
                 return convertURIPaint(paintedElement,
@@ -323,8 +286,7 @@ public abstract class PaintServer
 
                 case CSSPrimitiveValue.CSS_RGBCOLOR:
                     if (paintDef.getLength() == 2) {
-                        // CRP: 'ctx' param added for conversion.
-                    	return convertColor(v, opacity, ctx);
+                    	return convertColor(v, opacity);
                     } else {
                         return convertRGBICCColor(paintedElement, v,
                                                   (ICCColor)paintDef.item(2),
@@ -421,8 +383,7 @@ public abstract class PaintServer
             color = convertICCColor(paintedElement, iccColor, opacity, ctx);
         }
         if (color == null){
-        	// CRP: 'ctx' param added for conversion.
-            color = convertColor(colorDef, opacity, ctx);
+            color = convertColor(colorDef, opacity);
         }
         return color;
     }
@@ -477,7 +438,6 @@ public abstract class PaintServer
 
 	/**
 	 * Converts the given Value and opacity to a Color object.
-	 * CRP: change is to take context.
 	 * @param c
 	 *            The CSS color to convert.
 	 * @param opacity
@@ -485,37 +445,16 @@ public abstract class PaintServer
 	 * @param ctx
 	 * 		      The BridgeContext
 	 */
-	public static Color convertColor(Value c, float opacity, BridgeContext ctx) {
-		int r = resolveColorComponent(c.getRed());
-		int g = resolveColorComponent(c.getGreen());
-		int b = resolveColorComponent(c.getBlue());
-
-		// CRP: for color in svg(vectors), stick in cmyk info into extended java.awt.Color(ColorExt).
-		String rgbHex = String.format("%02X%02X%02X", r, g, b);
-		SflyColor sflyColor = ctx.getRgb_svgToCmyk().get(rgbHex);
-		if (sflyColor == null) {
-			sflyColor = convertToCmykUsingProfile(r, g, b, rgbProfile, cmykProfile);
-		}
-		return new ColorExt(sflyColor, r, g, b, Math.round(opacity * 255f));
-		// return new Color(r, g, b, Math.round(opacity * 255f));
+	public static Color convertColor(Value c, float opacity) {
+		// CRP: uses SFLY color. 
+		float[] rgbFloats = new float[] {  // Percentage values, 0.0 <= value <= 1.0.
+				resolveColorComponentAsFloat(c.getRed()), 
+				resolveColorComponentAsFloat(c.getGreen()), 
+				resolveColorComponentAsFloat(c.getBlue()) };
+		return new SflyColor(rgbFloats, opacity);
 	}
 
-	// CRP: 
-	static SflyColor convertToCmykUsingProfile(int r, int g, int b, String rgbProfile, String cmykProfile) {
-		SflyColor sflyColor = new SflyColor();
-		sflyColor.setRgb_svg(String.format("%02X%02X%02X", r, g, b));
-		ICC_ColorSpace rgbColorSpace = colorSpaces.get(rgbProfile);
-		ICC_ColorSpace cmykColorSpace = colorSpaces.get(cmykProfile);
-		float[] rgbFloats = new float[] { r/255.0f, g/255.0f, b/255.0f };
-		float[] ciexyz = rgbColorSpace.toCIEXYZ(rgbFloats);
-		float[] cmykFloats = cmykColorSpace.fromCIEXYZ(ciexyz);
-		sflyColor.setC(Math.round(100*cmykFloats[0]));
-		sflyColor.setM(Math.round(100*cmykFloats[1]));
-		sflyColor.setY(Math.round(100*cmykFloats[2]));
-		sflyColor.setK(Math.round(100*cmykFloats[3]));
-		return sflyColor;
-	}
-	
+
     /////////////////////////////////////////////////////////////////////////
     // java.awt.stroke
     /////////////////////////////////////////////////////////////////////////
@@ -677,6 +616,28 @@ public abstract class PaintServer
             f = v.getFloatValue();
             f = (f > 255f) ? 255f : (f < 0f) ? 0f : f;
             return Math.round(f);
+        default:
+            throw new IllegalArgumentException
+                ("Color component argument is not an appropriate CSS value");
+        }
+    }
+    
+    /**
+     * CRP: method added.
+     * Returns the value of one color component (0 <= result <= 1).
+     * @param v the value that defines the color component
+     */
+    public static float resolveColorComponentAsFloat(Value v) {
+        float f;
+        switch(v.getPrimitiveType()) {
+        case CSSPrimitiveValue.CSS_PERCENTAGE:
+            f = v.getFloatValue();
+            f = (f > 100f) ? 100f : (f < 0f) ? 0f : f;
+            return Math.round(f / 100f);
+        case CSSPrimitiveValue.CSS_NUMBER:
+            f = v.getFloatValue();
+            f = (f > 255f) ? 255f : (f < 0f) ? 0f : f;
+            return (f / 255f);
         default:
             throw new IllegalArgumentException
                 ("Color component argument is not an appropriate CSS value");

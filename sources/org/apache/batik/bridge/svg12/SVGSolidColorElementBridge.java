@@ -152,8 +152,7 @@ public class SVGSolidColorElementBridge extends AnimatableGenericSVGBridge
                 // It was explicit...
                 if (colorDef.getCssValueType() ==
                     CSSValue.CSS_PRIMITIVE_VALUE) {
-                	// CRP: now requires context for color conversion.
-                    return PaintServer.convertColor(colorDef, opacity, ctx);
+                    return PaintServer.convertColor(colorDef, opacity);
                 } else {
                     return PaintServer.convertRGBICCColor
                         (paintElement, colorDef.item(0),
