@@ -98,6 +98,13 @@
 	        <version>2.6.2</version>
 	    </dependency>
 	    
+	    <!-- Added to get FOP to use SFLY CMYK color space. -->
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>xmlgraphics-commons</artifactId>
+			<version>1.5</version>
+		</dependency>
+		
 	    <!-- Note that rhino:js and xml-apis:xml-apis-ext are two of the jars packaged 
 	    in batik's lib folder. We're getting them now from central repository rather than 
 	    the batik lib folder as in the original batik ant build. The other jars in the 

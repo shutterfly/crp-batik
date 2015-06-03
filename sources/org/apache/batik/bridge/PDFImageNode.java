@@ -20,11 +20,12 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 /**
  * CRP: added class.
- *
- * This is to handle case where the SVG image refers to a pdf file (such as for web2print.) (Default batik doesn't know how to deal with pdf images.)
- * See also See also SVGImageElementBridge, where this is created.
- *
- * This is a node that holds a Graphics2D image for PDF.
+ * 
+ * This is to handle case where the SVG image refers to a pdf file (such as for CLM Text.)
+ * (Default batik doesn't know how to deal with pdf images.) 
+ * See also SVGImageElementBridge, where this is created.
+ * 
+ * This is a node that holds a Graphics2D image for PDF. 
  */
 public class PDFImageNode extends AbstractGraphicsNode {
 

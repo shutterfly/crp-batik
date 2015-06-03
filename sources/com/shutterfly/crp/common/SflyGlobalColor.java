@@ -5,12 +5,12 @@ package com.shutterfly.crp.common;
  * Represents Shutterfly color mapping as found in Global Content System.
  * This is used for vectors only.
  */
-public class SflyColor {
-	public SflyColor() {
+public class SflyGlobalColor {
+	public SflyGlobalColor() {
 
 	}
 
-	public SflyColor(SflyColor color) {
+	public SflyGlobalColor(SflyGlobalColor color) {
 		this.colorId = color.colorId;
 		this.displayName = color.displayName;
 		this.rgb = color.rgb;
@@ -91,6 +91,13 @@ public class SflyColor {
 
 	public void setRgb_svg(String rgb_svg) {
 		this.rgb_svg = rgb_svg;
+	}
+	
+	/**
+	 * Returns CMYK as four float values, where value is 0.0 <= value <= 1.0.
+	 */
+	public float[] getCmyk() { 
+		return new float[] { c/100f, m/100f, y/100f, k/100f };
 	}
 
 	String colorId;

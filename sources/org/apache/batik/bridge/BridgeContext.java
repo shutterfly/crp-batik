@@ -76,8 +76,6 @@ import org.w3c.dom.events.MouseEvent;
 import org.w3c.dom.events.MutationEvent;
 import org.w3c.dom.svg.SVGDocument;
 
-import com.shutterfly.crp.common.SflyColor;
-
 /**
  * This class represents a context used by the various bridges and the
  * builder. A bridge context is associated to a particular document
@@ -279,12 +277,6 @@ public class BridgeContext implements ErrorConstants, CSSContext {
 
 
     /**
-     * CRP: Sfly color mapping
-     */
-    protected Map<String, SflyColor> rgb_svgToCmyk;
-
-    
-    /**
      * Constructs a new empty bridge context.
      */
     protected BridgeContext() {}
@@ -292,25 +284,21 @@ public class BridgeContext implements ErrorConstants, CSSContext {
     /**
      * Constructs a new bridge context.
      * @param userAgent the user agent
-     * @param rgb_svgToCmyk the sfly mapping.(CRP:)
      */
-    public BridgeContext(UserAgent userAgent, Map<String, SflyColor> rgb_svgToCmyk) {
+    public BridgeContext(UserAgent userAgent) {
         this(userAgent,
              sharedPool,
-             new DocumentLoader(userAgent),
-             rgb_svgToCmyk);
+             new DocumentLoader(userAgent));
     }
 
     /**
      * Constructs a new bridge context.
      * @param userAgent the user agent
      * @param loader document loader
-     * @param rgb_svgToCmyk the sfly mapping.(CRP:)
      */
     public BridgeContext(UserAgent userAgent,
-                         DocumentLoader loader,
-                         Map<String, SflyColor> rgb_svgToCmyk) {
-        this(userAgent, sharedPool, loader, rgb_svgToCmyk);
+                         DocumentLoader loader) {
+        this(userAgent, sharedPool, loader);
     }
 
     /**
@@ -318,19 +306,16 @@ public class BridgeContext implements ErrorConstants, CSSContext {
      * @param userAgent the user agent
      * @param interpreterPool the interpreter pool
      * @param documentLoader document loader
-     * @param rgb_svgToCmyk the sfly mapping.(CRP:)
      */
     public BridgeContext(UserAgent userAgent,
                          InterpreterPool interpreterPool,
-                         DocumentLoader documentLoader,
-                         Map<String, SflyColor> rgb_svgToCmyk) {
+                         DocumentLoader documentLoader) {
         this.userAgent = userAgent;
         this.viewportMap.put(userAgent, new UserAgentViewport(userAgent));
         this.interpreterPool = interpreterPool;
         this.documentLoader = documentLoader;
-        this.rgb_svgToCmyk = rgb_svgToCmyk;
     }
-
+    
     /**
      * Calls dispose on this BridgeContext, if it is a child context.
      */
@@ -373,13 +358,12 @@ public class BridgeContext implements ErrorConstants, CSSContext {
      * This function creates a new BridgeContext, it mostly
      * exists so subclasses can provide an instance of
      * themselves when a sub BridgeContext is needed.
-     * CRP: pass around the mapping while creating child contexts.
      */
     public BridgeContext createBridgeContext(SVGOMDocument doc) {
         if (doc.isSVG12()) {
-            return new SVG12BridgeContext(getUserAgent(), getDocumentLoader(), rgb_svgToCmyk);
+            return new SVG12BridgeContext(getUserAgent(), getDocumentLoader());
         }
-        return new BridgeContext(getUserAgent(), getDocumentLoader(), rgb_svgToCmyk);
+        return new BridgeContext(getUserAgent(), getDocumentLoader());
     }
 
     /**
@@ -408,15 +392,6 @@ public class BridgeContext implements ErrorConstants, CSSContext {
             eng.setAlternateStyleSheet(userAgent.getAlternateStyleSheet());
         }
     }
-
-    
-    /**
-     * CRP: Returns the sfly color mapping.
-     * @return rgb_svgToCmyk the mapping
-     */
-    public Map<String, SflyColor> getRgb_svgToCmyk() {
-		return rgb_svgToCmyk;
-	}
 
 	/**
      * Returns the CSS engine associated with given element.
