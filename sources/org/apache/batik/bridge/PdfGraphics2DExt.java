@@ -1655,7 +1655,7 @@ public class PdfGraphics2DExt extends Graphics2D {
             com.itextpdf.text.Image image = null;
             
 // TODO: 06/02/15: keep around a while for fop experiments.            
-            convertImagesToJPEG = true;  // @@@@@@@@@@@@@@@
+            convertImagesToJPEG = false;  // @@@@@@@@@@@@@@@
             
             
 			if (!convertImagesToJPEG) {
