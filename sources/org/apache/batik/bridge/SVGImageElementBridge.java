@@ -68,6 +68,8 @@ import org.w3c.dom.svg.SVGDocument;
 import org.w3c.dom.svg.SVGImageElement;
 import org.w3c.dom.svg.SVGSVGElement;
 
+import com.shutterfly.crp.common.SflyBatikSingletons;
+
 /**
  * Bridge class for the &lt;image> element.
  *
@@ -187,7 +189,7 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
     private GraphicsNode createPDFGraphicsNode(BridgeContext ctx, Element e,
 			ParsedURL purl) {
     	
-    	PDFImageNode gnode = new PDFImageNode(ctx,e,purl);
+    	GraphicsNode gnode = SflyBatikSingletons.getSflyEmbeddedPDFImageNodeFactory().createEmbeddedPDFImageNode(ctx, e, purl);
     	Rectangle2D bounds=getImageBounds(ctx, e);//svg image tag's height and width
 
     	//embedded pdf page's height and width
@@ -204,10 +206,6 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
 			throw new RuntimeException("Unable to open " + purl.toString(), ioe);
 		}*/
 
-    	gnode.fireGraphicsNodeChangeStarted();
-        gnode.invalidateGeometryCachePublic();
-        gnode.fireGraphicsNodeChangeCompleted();
-
         // create the implicit viewBox for the embedded pdf image(actually text). The viewBox for a
         // image is the size of the image or height and width of imported pdf page
         float [] vb = new float[4];
@@ -215,7 +213,6 @@ public class SVGImageElementBridge extends AbstractGraphicsNodeBridge {
         vb[1] = 0; // y
         vb[2] = (float)imgBounds.getWidth(); // width
         vb[3] = (float)imgBounds.getHeight(); // height
-
         
 		// handles the 'preserveAspectRatio', 'overflow' and 'clip' and sets the
         // appropriate AffineTransform to the image node

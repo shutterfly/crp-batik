@@ -42,6 +42,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSValue;
 
+import com.shutterfly.crp.common.SflyColor;
+
 /**
  * A collection of utility methods to deliver <tt>java.awt.Paint</tt>,
  * <tt>java.awt.Stroke</tt> objects that could be used to paint a
