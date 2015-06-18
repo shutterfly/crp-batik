@@ -1,8 +1,6 @@
-package org.apache.batik.bridge;
+package com.shutterfly.crp.common;
 
 import java.awt.Color;
-
-import com.shutterfly.crp.common.SflySingleColorColorSpace;
 
 /**
  * CRP: class added.

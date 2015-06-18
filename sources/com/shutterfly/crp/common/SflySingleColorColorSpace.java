@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.batik.bridge.SflyColor;
 import org.apache.log4j.Logger;
 import org.apache.xmlgraphics.java2d.color.DeviceCMYKColorSpace;
 
@@ -41,9 +40,7 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
 	private static String cmykProfile = "USWebCoatedSWOP.icc";
 	private static Map<String, ICC_ColorSpace> colorSpaces = new HashMap<String, ICC_ColorSpace>();
 	private static List<String> colorSpaceNames = Arrays.asList(new String[] { rgbProfile, cmykProfile });
-	
-	private static SFlyGlobalColorMapFactory sflyColorMapFactory;
-	
+		
 	static {
 		initProfiles();
 	}
@@ -55,7 +52,7 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
 		if (colorSpaces.size() == 0) {
 			for (String colorSpaceName : colorSpaceNames) {
 				try {
-					InputStream profileInputStream = SflyColor.class.getResourceAsStream("resources/"+colorSpaceName);
+					InputStream profileInputStream = SflySingleColorColorSpace.class.getResourceAsStream("resources/"+colorSpaceName);
 					ICC_ColorSpace colorSpace = new ICC_ColorSpace(ICC_Profile.getInstance(profileInputStream));
 					colorSpaces.put(colorSpaceName, colorSpace);
 				} catch (Exception ex) {
@@ -65,11 +62,6 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
 			}
 		}
 	}
-    
-	public static void initSflyColorMapFactory(SFlyGlobalColorMapFactory colorMapFactory) {
-		sflyColorMapFactory = colorMapFactory;
-	}
-	
 	
 	public SflySingleColorColorSpace(float[] initialRgbValues) {
 		if (initialRgbValues.length != 3) {
@@ -119,7 +111,9 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
     	final int g = Math.round(rgbvalue[1] * 255f);
     	final int b = Math.round(rgbvalue[2] * 255f);
 		String rgbHex = String.format("%02X%02X%02X", r, g, b);
-		SflyGlobalColor sflyGlobalColor = sflyColorMapFactory.getRgb_svgToCmykMap().get(rgbHex);
+		
+		final SFlyGlobalColorMapFactory colorMapFactory = SflyBatikSingletons.getSFlyGlobalColorMapFactory();
+		SflyGlobalColor sflyGlobalColor = colorMapFactory.getRgb_svgToCmykMap().get(rgbHex);
 		return sflyGlobalColor;
     }
 }
