@@ -84,6 +84,15 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
 	    	// Use the lookup map first, then fall back to using the color profiles.
 			SflyGlobalColor sflyGlobalColor = getSflyColorIfExists(initialRgbValues);
 			if (sflyGlobalColor == null) {
+				
+				// This log message is very important. It flags any colors that we don't have in the mapping.
+				// These colors may be converted to incorrect CMYK values! 
+				String message = "IMPORTANT: cannot find rbg value in mapping: " + getRrbHexString(initialRgbValues) +
+						" (This color may be mapped to an incorrect CMYK value) Add this color to the mapping!!!";
+				logger.error(message);
+				
+				// TODO: get rid of the following color profile approach. (We're so far not able to make it reliable.)
+				
 				// Rgb color is not in mapping, convert using profiles.
 				ICC_ColorSpace rgbColorSpace = colorSpaces.get(rgbProfile);
 				ICC_ColorSpace cmykColorSpace = colorSpaces.get(cmykProfile);
@@ -107,13 +116,18 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
     }
   
     private SflyGlobalColor getSflyColorIfExists(float[] rgbvalue) {
-    	final int r = Math.round(rgbvalue[0] * 255f);
-    	final int g = Math.round(rgbvalue[1] * 255f);
-    	final int b = Math.round(rgbvalue[2] * 255f);
-		String rgbHex = String.format("%02X%02X%02X", r, g, b);
-		
+    	String rgbHex = getRrbHexString(rgbvalue);
 		final SFlyGlobalColorMapFactory colorMapFactory = SflyBatikSingletons.getSFlyGlobalColorMapFactory();
 		SflyGlobalColor sflyGlobalColor = colorMapFactory.getRgb_svgToCmykMap().get(rgbHex);
 		return sflyGlobalColor;
     }
+    
+    private static String getRrbHexString(float[] rgbvalue) {
+    	final int r = Math.round(rgbvalue[0] * 255f);
+    	final int g = Math.round(rgbvalue[1] * 255f);
+    	final int b = Math.round(rgbvalue[2] * 255f);
+		final String rgbHex = String.format("%02X%02X%02X", r, g, b);
+		return rgbHex;
+    }
+  
 }
