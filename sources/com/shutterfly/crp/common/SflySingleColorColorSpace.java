@@ -17,7 +17,7 @@ import org.apache.xmlgraphics.java2d.color.DeviceCMYKColorSpace;
  * The SflyColor derives from java.awt.Color which stores and returns the colorspace 
  * for the color. Typically this color space is capable of mapping several values two
  * and from cmyk. In shutterfly, we start in batik with the svg's initial rgb color and use
- * the global color's rgb_svgToCmykMap to determine the "hard-coded" cmyk value for the color.
+ * the SVG's <crp:colorMapping> (rgb_svgToCmykMap) to determine the "hard-coded" cmyk value for the color.
  * If the rgb_svg value doesn't appear in mapping, we use the (Adobe default) ICC profiles
  * to determine the cmyk.
  * 
@@ -32,7 +32,6 @@ import org.apache.xmlgraphics.java2d.color.DeviceCMYKColorSpace;
  * org.apache.xmlgraphics.java2d.color.ColorSpaceOrigin.)
  */
 public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
-//	public class SflyCmykColorSpace extends ColorSpace { 
     private static final long serialVersionUID = 2925400926083528972L;
 	private static Logger logger = Logger.getLogger(SflySingleColorColorSpace.class);
 
@@ -70,7 +69,6 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
         this.initialRgbValues = initialRgbValues;
 	}
 
-
     @Override
     public float[] toRGB(float[] colorvalue) {
     	// Ignoring input as per class description.
@@ -79,27 +77,38 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
 
     @Override
     public float[] fromRGB(float[] rgbvalue) {
-    	// Ignoring input as per class description.
+    	// Ignoring input argument as per class description.
     	if (cmykValues == null) {
 	    	// Use the lookup map first, then fall back to using the color profiles.
-			SflyGlobalColor sflyGlobalColor = getSflyColorIfExists(initialRgbValues);
-			if (sflyGlobalColor == null) {
+			SflyColorMappingInfo sflyColorMappingInfo = getSflyColorIfExists(initialRgbValues);
+			if (sflyColorMappingInfo == null) {
+				
+				// TODO TODO: So CRP wants to allow SVG from any source and that SVG may not have a color mapping.
+				// We really don't want the ERROR log below in this case, so we should probably give it
+				// only when the mapping exists in the SVG (when SflyBatikSingletons.getSFlyColorMapFactory() != null)
+				// (but the given rgb value cannot be found.)
+				// In the cases where the mapping doesn't exist at all in the SVG, do we want to
+				// (a) use the GLOBAL color mapping and THEN fall back to colorspace mapping, 
+				// or (b) not emit CMYK at all? Approach (a) is complex, because now we need to manage global color
+				// synchronization (and fall back on unreliable color space mapping.)
+				// We can implement (b) simply by turning off the CMYK output to PDF.
+				// (Well, we'd need to figure out how to do that.) If we choose (b) then get rid of all
+				// color space mapping code in this file.
+				// TODO TODO.
 				
 				// This log message is very important. It flags any colors that we don't have in the mapping.
 				// These colors may be converted to incorrect CMYK values! 
 				String message = "IMPORTANT: cannot find rbg value in mapping: " + getRrbHexString(initialRgbValues) +
 						" (This color may be mapped to an incorrect CMYK value) Add this color to the mapping!!!";
 				logger.error(message);
-				
-				// TODO: get rid of the following color profile approach. (We're so far not able to make it reliable.)
-				
+								
 				// Rgb color is not in mapping, convert using profiles.
 				ICC_ColorSpace rgbColorSpace = colorSpaces.get(rgbProfile);
 				ICC_ColorSpace cmykColorSpace = colorSpaces.get(cmykProfile);
 				final float[] ciexyz = rgbColorSpace.toCIEXYZ(initialRgbValues);
 				cmykValues = cmykColorSpace.fromCIEXYZ(ciexyz);
 			} else {
-				cmykValues = sflyGlobalColor.getCmyk();
+				cmykValues = sflyColorMappingInfo.getCmyk();
 			}
     	} 
         return cmykValues;
@@ -115,11 +124,16 @@ public class SflySingleColorColorSpace extends DeviceCMYKColorSpace {
         throw new UnsupportedOperationException("NYI");
     }
   
-    private SflyGlobalColor getSflyColorIfExists(float[] rgbvalue) {
+    private SflyColorMappingInfo getSflyColorIfExists(float[] rgbvalue) {
     	String rgbHex = getRrbHexString(rgbvalue);
-		final SFlyGlobalColorMapFactory colorMapFactory = SflyBatikSingletons.getSFlyGlobalColorMapFactory();
-		SflyGlobalColor sflyGlobalColor = colorMapFactory.getRgb_svgToCmykMap().get(rgbHex);
-		return sflyGlobalColor;
+		final SflyColorMapFactory colorMapFactory = SflyBatikSingletons.getSFlyColorMapFactory();
+		
+		// CRP allows SVG from any source and that SVG may not have the color mapping info. Return null in this case.
+		if (colorMapFactory == null) {
+			return null;
+		}
+		SflyColorMappingInfo sflyColorMappingInfo = colorMapFactory.getRgbToCmykMap().get(rgbHex);
+		return sflyColorMappingInfo;
     }
     
     private static String getRrbHexString(float[] rgbvalue) {
