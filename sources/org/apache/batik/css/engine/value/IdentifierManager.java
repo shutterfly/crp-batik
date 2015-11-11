@@ -45,8 +45,16 @@ public abstract class IdentifierManager extends AbstractValueManager {
             String s = lu.getStringValue().toLowerCase().intern();
             Object v = getIdentifiers().get(s);
             if (v == null) {
-                throw createInvalidIdentifierDOMException(lu.getStringValue());
+            	// Begin CRP: Support for Shutterfly color identifiers (e.g., "id_hot-pink"). 
+            	// (Note that we use CSS_STRING here instead of CSS_IDENT only because doing so 
+            	// would require an additional change to a batik file.)
+               	if (s.startsWith("id_")) {
+            		return new StringValue(CSSPrimitiveValue.CSS_STRING, s);
+            	}
+            	// End CRP
+            	throw createInvalidIdentifierDOMException(lu.getStringValue());
             }
+            
             return (Value)v;
 
         default:

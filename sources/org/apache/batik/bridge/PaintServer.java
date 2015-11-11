@@ -42,7 +42,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSValue;
 
+import com.shutterfly.crp.common.SflyBatikSingletons;
 import com.shutterfly.crp.common.SflyColor;
+import com.shutterfly.crp.common.SflyColorMapFactory;
+import com.shutterfly.crp.common.SflyGlobalColorMapping;
+import com.shutterfly.crp.common.SflySvgColorMapping;
 
 /**
  * A collection of utility methods to deliver <tt>java.awt.Paint</tt>,
@@ -250,6 +254,16 @@ public abstract class PaintServer
                                         BridgeContext ctx) {
         if (paintDef.getCssValueType() == CSSValue.CSS_PRIMITIVE_VALUE) {
             switch (paintDef.getPrimitiveType()) {
+            
+        	// Begin CRP: Support for Shutterfly colorIds. See also IdentifierManager.
+            case CSSPrimitiveValue.CSS_STRING: { 
+            	if (paintDef.getStringValue().startsWith("id_")) {
+            		return convertColor(paintDef, opacity);
+            	}
+            	throw new IllegalArgumentException("Paint argument is not an appropriate CSS value");            
+            }
+        	// End CRP
+            
             case CSSPrimitiveValue.CSS_IDENT:
                 return null; // none
 
@@ -448,14 +462,36 @@ public abstract class PaintServer
 	 * 		      The BridgeContext
 	 */
 	public static Color convertColor(Value c, float opacity) {
-		// CRP: uses SFLY color. 
-		float[] rgbFloats = new float[] {  // Percentage values, 0.0 <= value <= 1.0.
-				resolveColorComponentAsFloat(c.getRed()), 
-				resolveColorComponentAsFloat(c.getGreen()), 
-				resolveColorComponentAsFloat(c.getBlue()) };
-		return new SflyColor(rgbFloats, opacity);
+		// CRP: modified to use SFLY color. (See also IdentifierManager.)
+		
+		if (c.getPrimitiveType() == CSSPrimitiveValue.CSS_STRING && c.getStringValue().startsWith("id_")) { 
+			// Here the value is an SFLY global colorId (such as id_hot-pink.) 
+			final SflyColorMapFactory colorMapFactory = SflyBatikSingletons.getSFlyColorMapFactory();
+			SflyGlobalColorMapping globalColorMappingInfo = colorMapFactory.getColorIdToGlobalColorMap().get(c.getStringValue());
+			if (globalColorMappingInfo == null) {
+				throw new RuntimeException("Cannot find global color mapping for colorId: " + c.getStringValue());
+			}
+			float[] rgbValues = globalColorMappingInfo.getRgbAsFloatArray();
+			float[] cmykValues = globalColorMappingInfo.getCmykAsFloatArray();
+			return new SflyColor(rgbValues, cmykValues, opacity);
+		} else { 
+			// Here we can assume the value is a numeric rgb value (as cmyk is not supported in SVG 1.1.)
+			float[] rgbValues = new float[] {  // Percentage values, 0.0 <= value <= 1.0.
+					resolveColorComponentAsFloat(c.getRed()), 
+					resolveColorComponentAsFloat(c.getGreen()), 
+					resolveColorComponentAsFloat(c.getBlue()) };
+			
+			// Try to map the rgb value to cmyk using the (SFLY) svg color map. 
+			SflySvgColorMapping svgColorMapping = SflyColor.getSvgColorMappingIfExists(rgbValues);
+			if (svgColorMapping != null) {
+				return new SflyColor(rgbValues, svgColorMapping.getCmyk(), opacity);
+			} else {
+				// Then Shutterfly is not providing an explicit mapping. In this case we simply
+				// emit RGB only for this color. 
+				return new Color(rgbValues[0], rgbValues[1], rgbValues[2], opacity);
+			}
+		}
 	}
-
 
     /////////////////////////////////////////////////////////////////////////
     // java.awt.stroke
